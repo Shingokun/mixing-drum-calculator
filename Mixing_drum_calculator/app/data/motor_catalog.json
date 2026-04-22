@@ -1,0 +1,29 @@
+[
+  {
+    "id": "4A160M2",
+    "name": "4A160M2",
+    "rated_power_kw": 11.0,
+    "rated_rpm": 2935,
+    "cos_phi": 0.89,
+    "eta_motor": 0.88,
+    "mass_kg": 105
+  },
+  {
+    "id": "4A132M2",
+    "name": "4A132M2",
+    "rated_power_kw": 11.0,
+    "rated_rpm": 2900,
+    "cos_phi": 0.88,
+    "eta_motor": 0.875,
+    "mass_kg": 87
+  },
+  {
+    "id": "4A100L2",
+    "name": "4A100L2",
+    "rated_power_kw": 5.5,
+    "rated_rpm": 2880,
+    "cos_phi": 0.88,
+    "eta_motor": 0.855,
+    "mass_kg": 36
+  }
+]
