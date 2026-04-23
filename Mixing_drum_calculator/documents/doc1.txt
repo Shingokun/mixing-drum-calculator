@@ -1,0 +1,354 @@
+TỔNG HỢP CÔNG THỨC CẦN THIẾT CHO UC-03, UC-04, UC-06 
+Trích từ file Excel “Đồ-án-TKKT-1_-chỉnh-sửa-2.xlsx” để chuyển giao cho Backend 
+Phạm vi: chỉ tổng hợp phần cần cho luồng giữa kỳ gồm UC-03 (nhập liệu & kiểm định), UC-04 (tính toán động học) và UC-06 
+(gợi ý động cơ). UC-05 tạm thời bỏ qua. Các công thức dưới đây được viết lại theo ký hiệu kỹ thuật và đối chiếu với ô Excel 
+để BE dễ map sang code. 
+ 
+1. Quy ước biến đầu vào và hằng số đang dùng trong file Excel 
+Biến/ô Excel 
+Ý nghĩa 
+Giá trị mẫu trong file 
+Ghi chú cho BE 
+C1 
+P – Công suất yêu cầu của 
+thùng trộn 
+6.5 kW 
+Input người dùng ở UC-03 
+C2 
+n – Số vòng quay đầu ra 
+75 vòng/phút 
+Input người dùng ở UC-03 
+C3 
+L – Thời gian phục vụ 
+10 năm 
+Input người dùng ở UC-03; 
+trong sheet hiện chưa đi vào 
+công thức UC-04/UC-06 
+F5 
+η_kn – Hiệu suất khớp nối 
+1.00 
+Hằng số/cấu hình 
+F6 
+η_ol – Hiệu suất 1 cặp ổ lăn 
+0.99 
+Trong sheet dùng 4 cặp ổ 
+lăn → η_ol^4 
+F7 
+η_brc – Hiệu suất bộ truyền 
+bánh răng côn 
+0.96 
+Hằng số/cấu hình 
+F8 
+η_brt – Hiệu suất bộ truyền 
+bánh răng trụ 
+0.97 
+Hằng số/cấu hình 
+F9 
+η_x – Hiệu suất bộ truyền 
+xích 
+0.91 
+Hằng số/cấu hình 
+O3 
+u_h – Tỉ số truyền hộp giảm 
+tốc 
+13 
+Giá trị thiết kế sơ bộ 
+O4 / N14 
+u_x – Tỉ số truyền bộ truyền 
+xích 
+3 
+Giá trị thiết kế sơ bộ 
+H17 
+u_1 – Tỉ số truyền cấp 
+nhanh 
+3.45 
+Chọn trước để suy ra u_2 
+ 
+2. UC-03 – Nhập liệu và kiểm định thông số đầu vào 
+• 
+Input bắt buộc: P, n, L (tương ứng ô C1, C2, C3 trong sheet). 
+• 
+Chỉ nhận số dương hợp lệ; chặn chữ cái, ký tự đặc biệt và dấu âm. 
+• 
+Cho phép cảnh báo vượt ngưỡng thiết kế tiêu chuẩn, nhưng không nhất thiết chặn người dùng xác nhận. 
+• 
+Sau khi validate thành công, lưu 3 input này vào Project Session để UC-04 sử dụng. 
+Gợi ý interface contract cho BE 
+Field 
+Kiểu dữ liệu 
+Rule tối thiểu 
+Gợi ý thông báo lỗi/cảnh 
+báo 
+power_kw 
+number 
+> 0 
+Vui lòng nhập công suất 
+dương hợp lệ 
+rpm_out 
+number 
+> 0 
+Vui lòng nhập số vòng quay 
+dương hợp lệ 
+service_life_year 
+number 
+> 0 
+Vui lòng nhập thời gian phục 
+vụ dương hợp lệ 
+ 
+3. UC-04 – Tính toán động học 
+Đây là phần đã có công thức rõ ràng trong Excel. BE nên tách thành 3 nhóm:  
+
+(i) 
+hiệu suất và công suất yêu cầu 
+(ii) 
+số vòng quay sơ bộ & phân phối tỉ số truyền 
+(iii) 
+bảng thông số công suất – tốc độ – mô men trên các trục. 
+ 
+3.1. Nhóm công thức hiệu suất và công suất yêu cầu 
+Kết quả 
+Ký hiệu kỹ thuật 
+Công thức 
+Ô Excel 
+Giá trị mẫu 
+Hiệu suất toàn hệ 
+thống 
+η 
+η = η_kn × η_ol^4 × 
+η_brc × η_brt × η_x 
+F10 = 
+ROUND(F5*(F6^4)*F7*F8*F9, 
+3) 
+0.814 
+Công suất cần thiết 
+trên trục động cơ 
+P_ct 
+P_ct = P / η 
+F12 = ROUND(C1/F10, 3) 
+7.985 kW 
+ 
+3.2. Nhóm công thức xác định số vòng quay sơ bộ và phân phối tỉ số truyền 
+Kết quả 
+Ký hiệu kỹ thuật 
+Công thức 
+Ô Excel 
+Giá trị mẫu 
+Tỉ số truyền chung sơ 
+bộ 
+u_ch, sơ bộ 
+u_ch = u_h × u_x 
+O2 = O3*O4 
+39 
+Số vòng quay sơ bộ 
+của động cơ 
+n_sb 
+n_sb = n × u_ch 
+O5 = C2*O2 
+2925 vòng/phút 
+Tỉ số truyền chung 
+thực tế sau khi chốt 
+động cơ 
+u_ch, thực tế 
+u_ch = n_đc / n 
+N13 = K10/C2 
+39.1333 
+Tỉ số truyền của hộp 
+giảm tốc 
+u_h 
+u_h = u_ch / u_x 
+N15 = N13/N14 
+13.0444 
+Tỉ số truyền cấp chậm 
+u_2 
+u_2 = u_h / u_1 
+H18 = 
+ROUND(N15/H17, 2) 
+3.78 
+Lưu ý triển khai: Excel đang đi theo logic 2 bước: đầu tiên tính n_sb từ tỉ số truyền sơ bộ; sau khi người dùng 
+chọn được động cơ thực tế, sheet mới tính lại u_ch thực tế từ n_đc (K10) rồi phân phối lại cho hộp giảm tốc. BE 
+nên giữ đúng luồng này để vừa phục vụ UC-04, vừa nối mạch sang UC-06. 
+ 
+3.3. Nhóm công thức bảng động học trên các trục 
+Các ô tô màu xanh lá ở vùng hàng 25–32 cho ra bảng kết quả mà UI có thể render ở cuối UC-04. Tên biến dưới 
+đây được viết lại để BE dễ xây object kết quả. Nếu muốn, FE có thể hiển thị thành 3 bảng: công suất trục, số vòng 
+quay trục, mô men trục. 
+Nhóm 
+Diễn giải 
+Công thức 
+Ô Excel 
+Giá trị mẫu 
+Công suất 
+P_out 
+P_out = P 
+B25 = C1 
+6.5 kW 
+Công suất 
+P_x 
+P_x = P_out / (η_x × 
+η_ol) 
+B26 = B25/(F9*F6) 
+7.2150 kW 
+Công suất 
+P_brt 
+P_brt = P_x / (η_brt × 
+η_ol) 
+B28 = B26/(F8*F6) 
+7.5133 kW 
+Công suất 
+P_brc 
+P_brc = P_brt / 
+(η_brc × η_ol) 
+B30 = B28/(F7*F6) 
+7.9054 kW 
+Công suất 
+P_ct 
+P_ct = P_brc / η_ol 
+B32 = B30/F6 
+7.9852 kW 
+Tốc độ 
+n_đc 
+n_đc = n_dm của 
+động cơ đã chọn 
+F26 = K10 
+2935 vòng/phút 
+Tốc độ 
+n_1 
+n_1 = n_đc / u_kn 
+F27 = F26/F25; với u_kn = 1 
+2935 vòng/phút 
+Tốc độ 
+n_2 
+n_2 = n_1 / u_1 
+F28 = F27/H17 
+850.7246 vòng/phút 
+Tốc độ 
+n_3 
+n_3 = n_2 / u_2 
+F29 = F28/H18 
+225.0594 vòng/phút 
+Mô men 
+T_đc 
+T_đc = 9.55×10^6 × 
+J25 = 9.55*10^6*(B32/F26) 
+25982.65 N·mm 
+
+(P_ct / n_đc) 
+Mô men 
+T_brc 
+T_brc = 9.55×10^6 × 
+(P_brc / n_đc) 
+J27 = 9.55*10^6*(B30/F26) 
+25722.83 N·mm 
+Mô men 
+T_brt 
+T_brt = 9.55×10^6 × 
+(P_brt / n_2) 
+J29 = 9.55*10^6*(B28/F28) 
+84342.06 N·mm 
+Mô men 
+T_x 
+T_x = 9.55×10^6 × 
+(P_x / n_3) 
+M25 = 
+9.55*10^6*(B26/F29) 
+306156.11 N·mm 
+Mô men 
+T_out 
+T_out = 9.55×10^6 × 
+(P / n) 
+M27 = 
+ROUND(9.55*10^6*(C1/C2), 
+4) 
+827666.67 N·mm 
+Gợi ý output JSON cho UC-04: { eta, required_motor_power_kw, preliminary_total_ratio, 
+preliminary_motor_rpm, actual_total_ratio, gearbox_ratio, stage_ratio_1, stage_ratio_2, shaft_powers, 
+shaft_rpms, shaft_torques }. 
+ 
+4. UC-06 – Gợi ý Top 3 động cơ điện phù hợp 
+Excel không chứa công thức chọn Top 3 hoàn chỉnh; sheet hiện tại chỉ chứa một dòng động cơ đã chọn mẫu (ví 
+dụ K160M2, công suất 11 kW, tốc độ 2935 vòng/phút). Vì vậy, với UC-06, BE nên bám theo logic từ đặc tả + các 
+đại lượng đã tính ở UC-04 để dựng recommendation engine. 
+Điểm mấu chốt: UC-06 lấy đầu vào từ UC-04, không lấy trực tiếp công thức từ các ô vàng của sheet. Các đại lượng cần dùng 
+là P_ct (công suất yêu cầu trên trục động cơ) và n_sb hoặc n_đc mục tiêu (số vòng quay sơ bộ/đích). 
+ 
+4.1. Dữ liệu đầu vào cho module gợi ý động cơ 
+Input 
+Nguồn từ Excel 
+Ghi chú 
+required_power_kw 
+F12 hoặc B32 
+Có thể dùng F12 cho kết quả hiển thị; 
+B32 là cùng ý nghĩa nhưng chi tiết hơn 
+theo chuỗi tổn hao 
+target_motor_rpm 
+O5 (sơ bộ) hoặc K10 khi đã chốt 
+Ở bước gợi ý nên ưu tiên O5 = n_sb; 
+sau khi user chọn xong thì lưu n_dm 
+thực tế của motor 
+transmission context 
+O2, N15, H17, H18 
+Dùng nếu muốn giải thích vì sao motor 
+đó phù hợp với phân phối tỉ số truyền 
+hiện tại 
+ 
+4.2. Thuật toán gợi ý đề xuất cho BE 
+Bước 
+Điều kiện / công thức 
+Ý nghĩa 
+Gợi ý code 
+1. Lọc công suất 
+P_dm ≥ P_ct 
+Loại ngay motor không đủ 
+công suất 
+where rated_power_kw >= 
+required_power_kw 
+2. Tính sai lệch tốc độ 
+Δn = |n_dm - n_sb|; có thể 
+dùng thêm δ_n = Δn / n_sb 
+Giữ lại motor có tốc độ gần 
+nhất với nhu cầu sơ bộ 
+delta_rpm = abs(rated_rpm 
+- target_motor_rpm) 
+3. Lọc theo ngưỡng sai lệch 
+δ_n ≤ ngưỡng cho phép 
+(team tự chốt, ví dụ 5%–
+10%) 
+Tránh motor lệch quá xa dù 
+đủ công suất 
+if delta_ratio <= tolerance 
+4. Sắp xếp 
+Ưu tiên (P_dm - P_ct) tăng 
+dần, sau đó Δn tăng dần; 
+nếu có cost/weight thì tiếp 
+tục tăng dần 
+Đúng tinh thần “dư công 
+suất ít nhất, gần tốc độ 
+nhất, rẻ/nhẹ hơn” 
+sort by surplus_power, 
+delta_rpm, cost or weight 
+5. Trả kết quả 
+Lấy Top 3 motor đầu danh 
+sách 
+Phục vụ UI “Top 3 động cơ 
+phù hợp” 
+return first 3 items 
+
+Công thức BE nên hiện kèm trong response để FE giải thích được lựa chọn: surplus_power = P_dm - P_ct; 
+delta_rpm = |n_dm - n_sb|; delta_rpm_ratio = delta_rpm / n_sb. 
+ 
+5. Khuyến nghị implementation để khỏi lệch Excel 
+• 
+Tách rõ input, constants, intermediate results và final results; tránh gộp tất cả vào một hàm lớn. 
+• 
+Giữ cùng đơn vị như Excel khi đối chiếu: công suất (kW), tốc độ (vòng/phút), mô men (N·mm). 
+• 
+Làm tròn ở tầng response/UI, không làm tròn sớm trong lõi tính toán trừ khi muốn bám đúng Excel (ví dụ F10, 
+F12, H18 có ROUND). 
+• 
+Tạo 1 test case golden sample theo đúng workbook hiện tại để BE assert gần đúng với các giá trị mẫu đã liệt 
+kê trong tài liệu này. 
+• 
+Với UC-06, catalog động cơ là dữ liệu riêng; Excel chỉ cung cấp đại lượng đầu vào để lọc/chấm điểm catalog, 
+không phải nơi chứa đầy đủ danh sách motor. 
+Golden sample nên dùng cho kiểm thử nhanh: P = 6.5 kW, n = 75 vòng/phút, L = 10 năm → η = 0.814, P_ct ≈ 
+7.985 kW, n_sb = 2925 vòng/phút, u_h thực tế ≈ 13.0444, u_2 ≈ 3.78. 

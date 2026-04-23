@@ -1,0 +1,329 @@
+TRƯỜNG ĐẠI HỌC BÁCH KHOA
+ĐẠI HỌC QUỐC GIA THÀNH PHỐHỒCHÍ MINH
+KHOA KHOA HỌC VÀ KĨ THUẬT MÁY TÍNH
+Đồán môn học Đa ngành - CO3111
+Ứng dụng HỗtrợTính toán Hệthống dẫn động thùng trộn
+GV hướng dẫn:
+Trương Vĩnh Lân
+Sinh viên:
+Nguyễn Minh Quốc
+2353029
+Hồng Chấn Phước
+2352963
+Bùi Phạm Ngọc Khôi
+2352599
+Nguyễn Lê Minh Nhật
+2352860
+Nguyễn Hoàng Long
+2352691
+Thành phốHồChí Minh, Tháng 3 năm 2026
+
+Trường Đại học Bách khoa-Đại học Quốc gia Thành phốHồChí Minh
+Khoa Khoa học và Kĩ thuật Máy tính
+Contents
+1
+Mục tiêu đềtài
+2
+2
+Yêu cầu hệthống (System Requirements)
+2
+2.1
+Yêu cầu môi trường (Environment Requirements) . . . . . . . . . . . . . . . . . .
+2
+2.2
+Yêu cầu phi chức năng (Non-Functional Requirements) . . . . . . . . . . . . . . .
+2
+3
+Yêu cầu chức năng (Functional Requirements)
+2
+3.1
+Phân hệQuản lý Phiên làm việc (Session Management) . . . . . . . . . . . . . .
+2
+3.2
+Phân hệNhập liệu & Khởi tạo (Input & Initialization) . . . . . . . . . . . . . . .
+3
+3.3
+Phân hệTính toán Chọn Động cơ & Phân bổTỷsốtruyền . . . . . . . . . . . .
+3
+3.4
+Phân hệTính toán Bộtruyền đai thang . . . . . . . . . . . . . . . . . . . . . . .
+3
+3.5
+Phân hệTính toán Hộp giảm tốc (Bánh răng Côn & Trụ) . . . . . . . . . . . . .
+3
+3.6
+Phân hệTổng hợp & Xuất báo cáo (Report Generation) . . . . . . . . . . . . . .
+3
+4
+Đặc tảUse Case (Use Case Specifications)
+4
+4.1
+Danh sách Use Case tổng quan . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4
+4.2
+Đặc tảUse Case chi tiết . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4
+Đồán môn học Đa ngành (CO3111)
+Page 1/7
+
+Trường Đại học Bách khoa-Đại học Quốc gia Thành phốHồChí Minh
+Khoa Khoa học và Kĩ thuật Máy tính
+1
+Mục tiêu đềtài
+Mục tiêu cốt lõi: Sốhóa và tựđộng hóa quy trình tính toán thiết kếchi tiết máy cho Hệthống
+dẫn động thùng trộn (bao gồm: chọn động cơ, bộtruyền đai thang, và hộp giảm tốc bánh răng
+hai cấp nón trụ).
+Vềmặt công nghệ: Xây dựng một phần mềm/ứng dụng có giao diện trực quan (GUI) dạng
+Wizard Form, cho phép người dùng (sinh viên Cơ KỹThuật) nhập thông sốđầu vào, chạy
+luồng tính toán động học tuần tựvà tra cứu tựđộng các hệsốtừcơ sởdữliệu tích hợp sẵn.
+Vềmặt nghiệp vụ: Đảm bảo kết quảtính toán có độchính xác cao, khớp với các công thức cơ
+học và xuất ra được bản thuyết minh báo cáo định dạng chuẩn (Excel/PDF) đểphục vụcho
+việc nộp đồán thiết kếkỹthuật.
+2
+Yêu cầu hệthống (System Requirements)
+2.1
+Yêu cầu môi trường (Environment Requirements)
+Nền tảng ứng dụng: Ứng dụng Desktop (Windows)
+Cơ sởdữliệu: Tích hợp sẵn CSDL nội bộlưu trữcác bảng tra cứu chuẩn của ngành Cơ khí
+(thông sốđộng cơ 3 pha, hệsốdịch chỉnh, bảng dung sai...). Không yêu cầu kết nối Internet
+khi tính toán.
+2.2
+Yêu cầu phi chức năng (Non-Functional Requirements)
+• Độchính xác (Accuracy): Mọi phép toán sửdụng sốthực phải được xửlý chính xác, làm
+tròn chuẩn xác đến 4 chữsốthập phân
+• Hiệu năng (Performance): Thời gian tính toán cho mỗi module (từlúc bấm nút đến lúc ra
+kết quảvà render giao diện) không vượt quá 0.5 giây. Thời gian xuất file báo cáo không
+vượt quá 3 giây.
+• Tính khảdụng (Usability): Giao diện phải có tính năng "Validate" (kiểm tra lỗi) ngay khi
+người dùng nhập liệu. Khóa (disable) các bước tính toán sau nếu bước trước đó chưa hoàn
+thành hoặc có lỗi.
+• Tính liên tục (Persistence): Hỗtrợtính năng Lưu (Save) và Tải (Load) phiên làm việc dưới
+dạng file định dạng riêng đểngười dùng không bịmất dữliệu đang tính dở.
+3
+Yêu cầu chức năng (Functional Requirements)
+Hệthống được chia thành các phân hệ(Modules) xửlý tuần tựtheo đúng Pipeline của quá trình
+thiết kếcơ khí.
+3.1
+Phân hệQuản lý Phiên làm việc (Session Management)
+FR 1.1: Hệthống cho phép tạo một dựán tính toán mới.
+FR 1.2: Hệthống cho phép lưu toàn bộthông sốđang tính toán xuống file cục bộ.
+FR 1.3: Hệthống cho phép tải lên một file dựán cũ đểtiếp tục làm việc.
+Đồán môn học Đa ngành (CO3111)
+Page 2/7
+
+Trường Đại học Bách khoa-Đại học Quốc gia Thành phốHồChí Minh
+Khoa Khoa học và Kĩ thuật Máy tính
+3.2
+Phân hệNhập liệu & Khởi tạo (Input & Initialization)
+FR 2.1: Cung cấp biểu mẫu cho phép nhập các thông sốđộng học cơ bản: Công suất trên
+trục thùng trộn (P), Sốvòng quay (n), và Thời gian phục vụ(L).
+FR 2.2: Cung cấp biểu mẫu nhập các hệsốhiệu suất của hệthống (hiệu suất khớp nối, bộ
+đai, bánh răng côn, bánh răng trụ, ổlăn...).
+FR 2.3: Hệthống tựđộng kiểm tra tính hợp lệcủa dữliệu (chỉnhận sốdương, báo lỗi nếu
+nhập sai định dạng).
+3.3
+Phân hệTính toán Chọn Động cơ & Phân bổTỷsốtruyền
+FR 3.1: Tính toán Công suất cần thiết và Vòng quay sơ bộdựa trên dữliệu đầu vào.
+FR 3.2: Tựđộng truy xuất và hiển thịdanh sách các động cơ điện 3 pha không đồng bộ
+phù hợp từCơ sởdữliệu.
+FR 3.3: Cho phép người dùng chọn 1 động cơ từdanh sách.
+FR 3.4: Tính toán và phân bổTỷsốtruyền thực sự, Công suất, Sốvòng quay, Momen
+xoắn trên các trục (Trục động cơ, Trục I, Trục II, Trục III).
+3.4
+Phân hệTính toán Bộtruyền đai thang
+FR 4.1: Nhận đầu vào từTrục I, tính toán và đềxuất các thông sốcủa bộtruyền đai thang
+(đường kính bánh đai d1, d2, vận tốc đai v, chiều dài đai).
+FR 4.2: Xác định chính xác sốlượng dây đai (z).
+3.5
+Phân hệTính toán Hộp giảm tốc (Bánh răng Côn & Trụ)
+FR 5.1 (Bánh răng côn - Cấp nhanh): Nhận đầu vào từTrục I và II, tính toán đường kính
+chia ngoài, chiều dài răng, và các hệsốliên quan. Thực hiện phép thửkiểm bền uốn và
+kiểm bền tiếp xúc.
+FR 5.2 (Bánh răng trụrăng thẳng - Cấp chậm): Nhận đầu vào từTrục II và III, tính toán
+khoảng cách trục, module m, hệsốdịch chỉnh (x1, x2). Thực hiện phép thửkiểm bền uốn
+và kiểm bền tiếp xúc.
+FR 5.3: Cảnh báo bằng màu sắc (đỏ/xanh) trực quan trên màn hình nếu các thông số
+không thỏa mãn điều kiện bền, yêu cầu người dùng điều chỉnh lại.
+3.6
+Phân hệTổng hợp & Xuất báo cáo (Report Generation)
+FR 6.1: Hiển thịmột bảng tổng hợp toàn bộcác thông sốđộng học và kích thước hình học
+của toàn bộhệthống trên một màn hình duy nhất.
+FR 6.2: Xuất dữliệu đã tính toán ra định dạng file Excel (dựa trên template chuẩn) hoặc
+file PDF làm tài liệu thuyết minh đồán.
+Đồán môn học Đa ngành (CO3111)
+Page 3/7
+
+Trường Đại học Bách khoa-Đại học Quốc gia Thành phốHồChí Minh
+Khoa Khoa học và Kĩ thuật Máy tính
+4
+Đặc tảUse Case (Use Case Specifications)
+4.1
+Danh sách Use Case tổng quan
+Hệthống phần mềm được chia thành 6 Use Case (UC) nối tiếp nhau, mô phỏng chính xác quy
+trình tính toán thiết kếcủa đồán Hệthống dẫn động thùng trộn:
+• UC01: Quản lý dựán (Tạo mới, Lưu file, Mởfile).
+• UC02: Nhập thông sốđầu vào.
+• UC03: Tính toán chọn Động cơ và phân bổtỷsốtruyền.
+• UC04: Tính toán Bộtruyền đai thang.
+• UC05: Tính toán Hộp giảm tốc (Bánh răng côn và trụ).
+• UC06: Tổng hợp và Xuất báo cáo.
+4.2
+Đặc tảUse Case chi tiết
+Thuộc tính
+Nội dung
+Mã Use Case
+UC01
+Tên Use Case
+Quản lý dựán
+Mô tả
+Cho phép người dùng tạo phiên tính toán mới, lưu tiến độđang làm dở
+xuống máy tính, hoặc mởlại file đã lưu đểtiếp tục làm.
+Tác nhân
+Người dùng
+Tiền điều kiện
+Ứng dụng đã được khởi động.
+Luồng sựkiện chính
+1. Người dùng chọn "Dựán mới" / "Lưu dựán" / "Mởdựán".
+2. Hệthống hiển thịcửa sổquản lý file.
+3. Người dùng thao tác với file (định dạng .json hoặc .xml).
+4. Hệthống nạp dữliệu từfile vào bộnhớvà cập nhật giao diện.
+Luồng ngoại lệ
+File được chọn bịlỗi hoặc không đúng định dạng: Hệthống báo lỗi "File
+không hợp lệ" và hủy thao tác.
+Table 1: Đặc tảUC01: Quản lý dựán
+Đồán môn học Đa ngành (CO3111)
+Page 4/7
+
+Trường Đại học Bách khoa-Đại học Quốc gia Thành phốHồChí Minh
+Khoa Khoa học và Kĩ thuật Máy tính
+Thuộc tính
+Nội dung
+Mã Use Case
+UC02
+Tên Use Case
+Nhập thông sốđầu vào
+Mô tả
+Người dùng cung cấp các thông sốcơ bản (Công suất P, Vòng quay n,
+Thời gian L) và các hệsốhiệu suất hệthống.
+Tác nhân
+Người dùng
+Tiền điều kiện
+Đang ởtrong một dựán tính toán.
+Luồng sựkiện chính
+1. Người dùng điền sốliệu vào các ô textbox trên giao diện.
+2. Người dùng nhấn nút "Xác nhận dữliệu".
+3. Hệthống kiểm tra tính hợp lệcủa dữliệu (Validate).
+4. Hệthống lưu dữliệu tạm thời và mởkhóa UC03.
+Luồng ngoại lệ
+Dữliệu bịbỏtrống hoặc chứa ký tựkhông hợp lệ, sốâm: Hệthống bôi
+đỏô nhập liệu, báo lỗi và chặn không cho sang bước tiếp theo.
+Table 2: Đặc tảUC02: Nhập thông sốđầu vào
+Thuộc tính
+Nội dung
+Mã Use Case
+UC03
+Tên Use Case
+Tính chọn Động cơ
+Mô tả
+Tính toán công suất cần thiết, đềxuất động cơ từcơ sởdữliệu và tự
+động phân bổtỷsốtruyền ra các trục I, II, III.
+Tác nhân
+Người dùng
+Tiền điều kiện
+Đã hoàn thành UC02.
+Luồng sựkiện chính
+1. Hệthống tựđộng tính Công suất cần thiết và Vòng quay sơ bộ.
+2. Hệthống lọc trong CSDL và hiển thịdanh sách động cơ thỏa mãn.
+3. Người dùng chọn 1 động cơ từdanh sách và nhấn "Chốt động cơ".
+4. Hệthống tính toán tỷsốtruyền chung, chia tỷsốtruyền cho các bộ
+truyền.
+5. Hệthống tính Momen, Công suất, Vòng quay cho trục I, II, III và mở
+khóa UC04.
+Luồng ngoại lệ
+Không có động cơ nào trong CSDL thỏa mãn mức công suất đầu vào:
+Hệthống cảnh báo và cho phép người dùng tựnhập thông sốđộng cơ
+bằng tay.
+Table 3: Đặc tảUC03: Tính chọn Động cơ
+Đồán môn học Đa ngành (CO3111)
+Page 5/7
+
+Trường Đại học Bách khoa-Đại học Quốc gia Thành phốHồChí Minh
+Khoa Khoa học và Kĩ thuật Máy tính
+Thuộc tính
+Nội dung
+Mã Use Case
+UC04
+Tên Use Case
+Tính Bộtruyền đai thang
+Mô tả
+Tiếp nhận dữliệu từtrục I đểtính toán đường kính bánh đai, chiều dài
+đai và sốlượng dây đai.
+Tác nhân
+Người dùng
+Tiền điều kiện
+Đã chốt xong thông sốcác trục ởUC03.
+Luồng sựkiện chính
+1. Hệthống gọi các công thức tính đường kính d1, d2, vận tốc đai.
+2. Hệthống tra bảng hệsố(từCSDL) đểtính chính xác sốdây đai (z).
+3. Hệthống hiển thịkết quảbộtruyền đai lên màn hình.
+4. Người dùng xác nhận kết quảvà Hệthống mởkhóa UC05.
+Luồng ngoại lệ
+Vận tốc đai vượt quá giới hạn cho phép (> 25m/s): Cảnh báo màu đỏ
+yêu cầu người dùng quay lại UC03 đểchọn lại tỷsốtruyền sơ bộ.
+Table 4: Đặc tảUC04: Tính Bộtruyền đai thang
+Thuộc tính
+Nội dung
+Mã Use Case
+UC05
+Tên Use Case
+Tính Hộp giảm tốc (Bánh răng)
+Mô tả
+Tính toán các thông sốhình học (module, khoảng cách trục) và kiểm
+bền uốn, bền tiếp xúc cho bánh răng côn và bánh răng trụ.
+Tác nhân
+Người dùng
+Tiền điều kiện
+Đã hoàn thành UC04.
+Luồng sựkiện chính
+1. Người dùng chọn vật liệu chếtạo bánh răng từDropdown list.
+2. Hệthống tựđộng tính ứng suất cho phép.
+3. Hệthống tính các thông sốbánh răng côn (Cấp nhanh).
+4. Hệthống tính các thông sốbánh răng trụ(Cấp chậm).
+5. Hệthống chạy thuật toán kiểm bền và thông báo kết quả"Đạt/Không
+đạt".
+Luồng ngoại lệ
+Thuật toán kiểm bền trảvềkết quảKhông đạt: Hệthống cảnh báo và
+gợi ý người dùng điều chỉnh hệsốchiều rộng vành răng hoặc chọn lại
+vật liệu.
+Table 5: Đặc tảUC05: Tính Hộp giảm tốc (Bánh răng)
+Đồán môn học Đa ngành (CO3111)
+Page 6/7
+
+Trường Đại học Bách khoa-Đại học Quốc gia Thành phốHồChí Minh
+Khoa Khoa học và Kĩ thuật Máy tính
+Thuộc tính
+Nội dung
+Mã Use Case
+UC06
+Tên Use Case
+Tổng hợp và Xuất báo cáo
+Mô tả
+Gom toàn bộdữliệu đã tính từUC02 đến UC05 thành một bảng tổng
+kết và xuất ra file thuyết minh.
+Tác nhân
+Người dùng
+Tiền điều kiện
+Đã tính toán xong và thỏa mãn mọi điều kiện bền ởUC05.
+Luồng sựkiện chính
+1. Hệthống hiển thịbảng Data Grid tổng hợp mọi thông sốđộng học
+và hình học.
+2. Người dùng nhấn nút "Xuất file Excel/PDF".
+3. Hệthống tựđộng điền dữliệu vào Template có sẵn và tải xuống máy
+tính người dùng.
+Luồng ngoại lệ
+Lỗi khởi tạo file do Template bịhỏng hoặc thiếu quyền truy cập hệ
+thống: Hiển thịthông báo "Lỗi xuất file, vui lòng kiểm tra lại quyền
+truy cập".
+Table 6: Đặc tảUC06: Tổng hợp và Xuất báo cáo
+Đồán môn học Đa ngành (CO3111)
+Page 7/7

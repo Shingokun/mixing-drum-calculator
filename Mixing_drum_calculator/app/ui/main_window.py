@@ -31,15 +31,22 @@ class MainWindow(QMainWindow):
         # Stacked pages
         self.stack = QStackedWidget()
         # Import và thêm các trang UC
+        from app.ui.uc01_project import UC01ProjectPage
         from app.ui.uc02_input import UC02InputPage
         from app.ui.uc03_motor import UC03MotorPage
-        # ... các trang khác
-        
-        self.page_uc01 = QWidget()  # placeholder
+        from app.ui.uc04_belt import UC04BeltPage
+        from app.ui.uc05_gearbox import UC05GearboxPage
+        from app.ui.uc06_report import UC06ReportPage
+
+        self.page_uc01 = UC01ProjectPage(self.session, self)
         self.page_uc02 = UC02InputPage(self.session, self)
         self.page_uc03 = UC03MotorPage(self.session, self)
+        self.page_uc04 = UC04BeltPage(self.session, self)
+        self.page_uc05 = UC05GearboxPage(self.session, self)
+        self.page_uc06 = UC06ReportPage(self.session, self)
         
-        for page in [self.page_uc01, self.page_uc02, self.page_uc03]:
+        for page in [self.page_uc01, self.page_uc02, self.page_uc03,
+                     self.page_uc04, self.page_uc05, self.page_uc06]:
             self.stack.addWidget(page)
 
         layout.addWidget(self.nav)

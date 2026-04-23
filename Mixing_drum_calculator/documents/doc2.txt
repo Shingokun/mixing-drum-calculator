@@ -1,0 +1,248 @@
+TỔNG HỢP CÔNG THỨC – UC05 
+Cặp bánh răng côn cấp nhanh (lấy theo file Excel TKKT) 
+Tài liệu gửi BE • Phiên bản rút gọn • Chỉ giữ các công thức cần code 
+ 
+1. Input từ UC04 + hằng số đang dùng trong sheet 
+Biến / công thức 
+Diễn giải / ký hiệu 
+Ô Excel 
+u = u1 
+Tỉ số truyền cấp nhanh 
+H17 
+n1 
+Số vòng quay trục vào cấp nhanh (vg/ph) 
+F27 
+T1 
+Mô men xoắn trên trục vào cấp nhanh 
+(Nmm) 
+J27 
+HB1, HB2 
+Độ cứng Brinell của bánh nhỏ / bánh lớn 
+D42, I42 
+S_H, S_F 
+Hệ số an toàn tiếp xúc / uốn 
+M39, M40 
+K_d = 100 
+Hệ số vật liệu dùng trong công thức tính 
+kích thước 
+C66 
+ψ_R = 0.255 
+Hệ số chiều rộng vành răng 
+C67 
+K_m = 1.13 
+Hệ số tải 
+C68 
+z1_sơ bộ = 16 
+Số răng sơ bộ bánh nhỏ 
+J63 
+m_te(chọn) = 2.5 
+Mô đun ngoài tiêu chuẩn đang dùng trong 
+sheet 
+K69 
+α = 20° 
+Góc áp lực dùng để tính lực 
+hằng số trong 
+B101:B102 
+ 
+2. Ứng suất cho phép 
+Biến / công thức 
+Diễn giải / ký hiệu 
+Ô Excel 
+N_HO1 = 30·HB1^2.4 
+Số chu kì cơ sở tiếp xúc của 
+bánh nhỏ 
+C46 
+N_HO2 = 30·HB2^2.4 
+Số chu kì cơ sở tiếp xúc của 
+bánh lớn 
+C47 
+N_FE1 = N_HE1 = 60·n1·c·L_h 
+Số chu kì làm việc tương đương 
+bánh nhỏ 
+G46 
+N_FE2 = N_HE2 = 60·n2·c·L_h 
+Số chu kì làm việc tương đương 
+bánh lớn 
+G47 
+K_HL1 = K_HL2 = 1 
+Hệ số tuổi thọ tiếp xúc (sheet 
+đang lấy bằng 1) 
+C50 
+K_FL1 = K_FL2 = 1 
+Hệ số tuổi thọ uốn (sheet đang 
+lấy bằng 1) 
+G50 
+σ_Hlim1 = 2·HB1 + 70 
+Ứng suất tiếp xúc tới hạn bánh 
+nhỏ (MPa) 
+C54 
+σ_Hlim2 = 2·HB2 + 70 
+Ứng suất tiếp xúc tới hạn bánh 
+lớn (MPa) 
+C55 
+σ_Flim1 = 1.8·HB1 
+Ứng suất uốn tới hạn bánh nhỏ 
+(MPa) 
+G54 
+
+σ_Flim2 = 1.8·HB2 
+Ứng suất uốn tới hạn bánh lớn 
+(MPa) 
+G55 
+[σ_H]1 = σ_Hlim1·K_HL1 / S_H 
+Ứng suất tiếp xúc cho phép của 
+bánh nhỏ 
+C59 
+[σ_H]2 = σ_Hlim2·K_HL2 / S_H 
+Ứng suất tiếp xúc cho phép của 
+bánh lớn 
+C60 
+[σ_H] = min([σ_H]1, [σ_H]2) 
+Lấy giá trị nhỏ hơn để tính kích 
+thước 
+C61 
+[σ_F]1 = σ_Flim1·K_FL1·K_FC / S_F 
+Ứng suất uốn cho phép bánh 
+nhỏ 
+G59 
+[σ_F]2 = σ_Flim2·K_FL2·K_FC / S_F 
+Ứng suất uốn cho phép bánh 
+lớn 
+G60 
+ 
+3. Thông số hình học chính 
+Biến / công thức 
+Diễn giải / ký hiệu 
+Ô Excel 
+K_R = 0.5·K_d 
+Hệ số trung gian 
+C65 
+R_e = K_R·√(u^2+1)·((T1·K_m)/((1-
+ψ_R)·ψ_R·u·[σ_H]^2))^(1/3) 
+Chiều dài côn ngoài (mm) 
+G65 
+d_e1 = 2·R_e / √(u^2+1) 
+Đường kính vòng chia ngoài 
+bánh nhỏ (mm) 
+G66 
+d_m1 = (1-0.5·ψ_R)·d_e1 
+Đường kính vòng chia trung 
+bình bánh nhỏ (mm) 
+G67 
+m_te = d_m1 / z1 
+Mô đun ngoài tính được 
+G68 
+m_t = m_te / (1-0.5·ψ_R) 
+Mô đun trung bình 
+G69 
+z1 = floor(1.6·z1_sơ bộ) 
+Số răng bánh nhỏ sau khi 
+chọn 
+J64 → K64 → C73 
+z2 = 86 
+Số răng bánh lớn đang dùng 
+trong sheet 
+C74 
+u_tt = z2 / z1 
+Tỉ số truyền thực tế sau khi 
+chọn số răng 
+F73 
+Δu = (u_tt - u) / u 
+Sai lệch tỉ số truyền 
+F74 
+R_e = 0.5·m_te·√(z1^2 + z2^2) 
+Công thức tính lại chiều dài 
+côn ngoài theo mô đun chuẩn 
+P63 
+b = ψ_R·R_e 
+Chiều rộng vành răng (mm) 
+P64 
+R_m = R_e - 0.5·b 
+Chiều dài côn trung bình 
+(mm) 
+P65 
+h_e = 2.2·m_te 
+Chiều cao răng ngoài 
+P68 
+h_ae = m_te 
+Chiều cao đầu răng ngoài 
+Q69 
+h_fe = h_e - h_ae 
+Chiều cao chân răng ngoài 
+Q70 
+δ1 = atan(z1 / z2) 
+Góc mặt côn chia bánh nhỏ 
+B76 → C76 
+δ2 = 90° - δ1 
+Góc mặt côn chia bánh lớn 
+C77 
+ 
+4. Công thức kiểm bền uốn 
+Biến / công thức 
+Diễn giải / ký hiệu 
+Ô Excel 
+K_F = K_Fα·K_Fβ·K_Fv 
+Hệ số tải khi tính uốn; sheet đang 
+tách thành B81 = B82·B83·B84 
+B81 
+
+K_Fα = 1 
+Hệ số phân bố tải theo chu vi 
+B82 
+K_Fβ = 1.25 
+Hệ số phân bố tải theo chiều rộng B83 
+K_Fv = 1 + 
+(K·b·d_f1)/(2·T1·K_Fβ·K_Fα) 
+Hệ số tải trọng động 
+B84 
+K = 0.016·47·v·√(d_f1·(u_tt+1)/u_tt) 
+Tham số trung gian để tính K_Fv 
+B85 
+Y_ε = 1 / (1.88 - 3.2·(1/z1 + 1/z2)) 
+Hệ số kể đến trùng khớp 
+B89 → B90 
+z_v1 = z1 / cos(δ1) 
+Số răng tương đương bánh nhỏ 
+B93 
+z_v2 = z2 / cos(δ2) 
+Số răng tương đương bánh lớn 
+B94 
+Y_F1 = 3.47 + 13.2 / z_v1 
+Hệ số dạng răng bánh nhỏ 
+B91 
+Y_F2 = 3.47 + 13.2 / z_v2 
+Hệ số dạng răng bánh lớn 
+B92 
+σ_F1 = (2·T1·K_F·Y_ε·Y_C·Y_F1) / 
+(0.85·b·h_fe·d_f1) 
+Ứng suất uốn bánh nhỏ (MPa); 
+sheet lấy Y_C = 1 
+B95 
+σ_F2 = σ_F1·Y_F2 / Y_F1 
+Ứng suất uốn bánh lớn (MPa) 
+B96 
+Điều kiện đạt 
+σ_F1 ≤ [σ_F]1 và σ_F2 ≤ [σ_F]2 
+so sánh với G59, 
+G60 
+ 
+5. Lực tác dụng lên bộ truyền 
+Biến / công thức 
+Diễn giải / ký hiệu 
+Ô Excel 
+F_t = 2·T1 / d_f1 
+Lực vòng 
+B100 
+F_r = 
+F_t·tan(20°)·cos(δ1) Lực hướng tâm 
+B101 
+F_a = 
+F_t·tan(20°)·sin(δ1) 
+Lực dọc trục 
+B102 
+ 
+Ghi chú triển khai:  
+1) Với bản demo hiện tại, nên giữ cố định bộ hằng số / vật liệu đúng như sheet;  
+2) z1, z2 và m_te đang được sheet chọn theo giá trị chuẩn, BE nên tách bước giá trị tính và 
+giá trị chọn nếu cần bám Excel;  
+3) Đơn vị đang dùng trong sheet: n = vg/ph, T = Nmm, kích thước = mm, ứng suất = MPa. 

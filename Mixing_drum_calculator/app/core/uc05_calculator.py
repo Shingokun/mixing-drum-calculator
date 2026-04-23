@@ -1,130 +1,170 @@
+# ============================================================
+# uc05_calculator.py — Tính bánh răng côn cấp nhanh
+# ============================================================
 import math
-from dataclasses import dataclass
+from app.core.session import ConeGearResult
+from app.data.constants import STANDARD_MODULES
 
-@dataclass
-class ConeGearInput:
-    u1: float          # Tỉ số truyền cấp nhanh
-    n1_rpm: float      # Tốc độ trục I
-    T1_Nmm: float      # Momen xoắn trục I
-    HB1: float = 250   # Độ cứng bánh nhỏ
-    HB2: float = 230   # Độ cứng bánh lớn
-    S_H: float = 1.1
-    S_F: float = 1.75
-    K_d: float = 100
-    psi_R: float = 0.255
-    K_m: float = 1.13
-    z1_sb: int = 16
-    K_FC: float = 1.0
-    L_h: float = 87600  # Giờ làm việc (10 năm * 365 * 24)
 
 class UC05Calculator:
-    def calc_allowable_stress(self, inp: ConeGearInput) -> dict:
-        NHO1 = 30 * (inp.HB1 ** 2.4)
-        NHO2 = 30 * (inp.HB2 ** 2.4)
-        c = 1  # số lần ăn khớp mỗi vòng
-        n2 = inp.n1_rpm / inp.u1
-        NHE1 = NHE2 = 60 * inp.n1_rpm * c * inp.L_h  # simplified (=1)
-        K_HL1 = K_HL2 = 1.0
-        K_FL1 = K_FL2 = 1.0
-        sig_Hlim1 = 2 * inp.HB1 + 70
-        sig_Hlim2 = 2 * inp.HB2 + 70
-        sig_Flim1 = 1.8 * inp.HB1
-        sig_Flim2 = 1.8 * inp.HB2
-        sig_H1 = sig_Hlim1 * K_HL1 / inp.S_H
-        sig_H2 = sig_Hlim2 * K_HL2 / inp.S_H
+
+    def _pick_std_module(self, m_calc: float) -> float:
+        for m in sorted(STANDARD_MODULES):
+            if m >= m_calc:
+                return float(m)
+        return float(STANDARD_MODULES[-1])
+
+    # ------------------------------------------------------------------ #
+    #  Ứng suất cho phép
+    # ------------------------------------------------------------------ #
+    def calc_allowable_stress(self, HB1: float, HB2: float,
+                               S_H: float, S_F: float,
+                               K_FC: float = 1.0) -> dict:
+        sig_Hlim1 = 2 * HB1 + 70
+        sig_Hlim2 = 2 * HB2 + 70
+        sig_Flim1 = 1.8 * HB1
+        sig_Flim2 = 1.8 * HB2
+        K_HL = K_FL = 1.0          # tuổi thọ lớn → K=1
+        sig_H1 = sig_Hlim1 * K_HL / S_H
+        sig_H2 = sig_Hlim2 * K_HL / S_H
         sig_H  = min(sig_H1, sig_H2)
-        sig_F1 = sig_Flim1 * K_FL1 * inp.K_FC / inp.S_F
-        sig_F2 = sig_Flim2 * K_FL2 * inp.K_FC / inp.S_F
+        sig_F1 = sig_Flim1 * K_FL * K_FC / S_F
+        sig_F2 = sig_Flim2 * K_FL * K_FC / S_F
         return {
             "sig_H1": round(sig_H1, 2), "sig_H2": round(sig_H2, 2),
-            "sig_H": round(sig_H, 2),
-            "sig_F1": round(sig_F1, 2), "sig_F2": round(sig_F2, 2)
+            "sig_H":  round(sig_H,  2),
+            "sig_F1": round(sig_F1, 2), "sig_F2": round(sig_F2, 2),
         }
 
-    def calc_geometry(self, inp: ConeGearInput, stress: dict) -> dict:
-        K_R = 0.5 * inp.K_d
-        u, T1, pR, Km = inp.u1, inp.T1_Nmm, inp.psi_R, inp.K_m
-        sig_H = stress["sig_H"]
+    # ------------------------------------------------------------------ #
+    #  Hình học
+    # ------------------------------------------------------------------ #
+    def calc_geometry(self, u1: float, T1_Nmm: float, sig_H: float,
+                       K_d: float = 100, psi_R: float = 0.255,
+                       K_m: float = 1.13, z1_sb: int = 16) -> dict:
+        K_R = 0.5 * K_d
+        Re = K_R * math.sqrt(u1**2 + 1) * (
+            (T1_Nmm * K_m) / ((1 - psi_R) * psi_R * u1 * sig_H**2)
+        ) ** (1/3)
 
-        # Chiều dài côn ngoài
-        Re = K_R * math.sqrt(u**2 + 1) * ((T1 * Km) / ((1 - pR) * pR * u * sig_H**2)) ** (1/3)
-        de1 = 2 * Re / math.sqrt(u**2 + 1)
-        dm1 = (1 - 0.5 * pR) * de1
+        de1 = 2 * Re / math.sqrt(u1**2 + 1)
+        dm1 = (1 - 0.5 * psi_R) * de1
 
-        # Chọn z1, z2
-        z1 = math.floor(1.6 * inp.z1_sb)
-        z2 = round(z1 * u)
+        z1 = math.floor(1.6 * z1_sb)
+        z2 = round(z1 * u1)
         u_tt = z2 / z1
-        delta_u = abs(u_tt - u) / u
+        delta_u = abs(u_tt - u1) / u1
 
         m_te_calc = dm1 / z1
-        # Chọn mô đun tiêu chuẩn (bảng chuẩn VN)
-        std_modules = [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]
-        m_te = min((m for m in std_modules if m >= m_te_calc), default=std_modules[-1])
+        m_te = self._pick_std_module(m_te_calc)
 
         Re2 = 0.5 * m_te * math.sqrt(z1**2 + z2**2)
-        b   = round(pR * Re2, 2)
-        Rm  = round(Re2 - 0.5 * b, 2)
+        b   = psi_R * Re2
+        Rm  = Re2 - 0.5 * b
+
         delta1 = math.atan(z1 / z2)
-        delta2 = math.pi/2 - delta1
+        delta2 = math.pi / 2 - delta1
+
+        h_e  = 2.2 * m_te
+        h_ae = m_te
+        h_fe = h_e - h_ae
+        de2  = m_te * z2
 
         return {
-            "Re": round(Re2, 2), "de1": round(de1, 2),
-            "dm1": round(dm1, 2), "m_te": m_te,
+            "Re": round(Re2, 2), "de1": round(de1, 2), "de2": round(de2, 2),
+            "dm1": round(dm1, 2), "m_te": m_te, "m_te_calc": round(m_te_calc, 3),
             "z1": z1, "z2": z2, "u_tt": round(u_tt, 4),
             "delta_u_pct": round(delta_u * 100, 2),
-            "b": b, "Rm": Rm,
+            "b": round(b, 2), "Rm": round(Rm, 2),
+            "h_e": round(h_e, 3), "h_fe": round(h_fe, 3), "h_ae": h_ae,
             "delta1_deg": round(math.degrees(delta1), 3),
             "delta2_deg": round(math.degrees(delta2), 3),
         }
 
-    def check_bending_strength(self, inp: ConeGearInput,
-                                geo: dict, stress: dict) -> dict:
+    # ------------------------------------------------------------------ #
+    #  Kiểm bền uốn
+    # ------------------------------------------------------------------ #
+    def check_bending(self, T1_Nmm: float, geo: dict,
+                       sig_F1_allow: float, sig_F2_allow: float) -> dict:
         z1, z2 = geo["z1"], geo["z2"]
-        d1, d2 = geo["delta1_deg"], geo["delta2_deg"]
-        d1_r, d2_r = math.radians(d1), math.radians(d2)
+        d1r = math.radians(geo["delta1_deg"])
+        d2r = math.radians(geo["delta2_deg"])
+        b   = geo["b"]
+        m_te= geo["m_te"]
+        h_fe= geo["h_fe"]
 
-        K_Fa, K_Fb, K_Fv = 1.0, 1.25, 1.0  # simplified
-        K_F = K_Fa * K_Fb * K_Fv
+        K_Fa = 1.0; K_Fb = 1.25; K_Fv = 1.0
+        K_F  = K_Fa * K_Fb * K_Fv
 
         Y_eps = 1 / (1.88 - 3.2 * (1/z1 + 1/z2))
-        zv1 = z1 / math.cos(d1_r)
-        zv2 = z2 / math.cos(d2_r)
+        zv1 = z1 / math.cos(d1r)
+        zv2 = z2 / math.cos(d2r)
         Y_F1 = 3.47 + 13.2 / zv1
         Y_F2 = 3.47 + 13.2 / zv2
 
-        b = geo["b"]
-        m_te = geo["m_te"]
-        h_e = 2.2 * m_te
-        h_fe = h_e - m_te  # h_fe = h_e - h_ae; h_ae = m_te
-        d_f1 = geo["de1"] - 2 * h_fe * math.cos(d1_r)
+        de1 = geo["de1"]
+        d_f1 = de1 - 2 * h_fe * math.cos(d1r)
 
         Y_C = 1.0
-        sig_F1 = (2 * inp.T1_Nmm * K_F * Y_eps * Y_C * Y_F1) / (0.85 * b * h_fe * d_f1)
-        sig_F2 = sig_F1 * Y_F2 / Y_F1
-
-        F_t = 2 * inp.T1_Nmm / d_f1
-        F_r = F_t * math.tan(math.radians(20)) * math.cos(d1_r)
-        F_a = F_t * math.tan(math.radians(20)) * math.sin(d1_r)
-
-        return {
-            "sig_F1": round(sig_F1, 2),
-            "sig_F2": round(sig_F2, 2),
-            "F_t": round(F_t, 2),
-            "F_r": round(F_r, 2),
-            "F_a": round(F_a, 2),
-            "pass": sig_F1 <= stress["sig_F1"] and sig_F2 <= stress["sig_F2"]
-        }
-
-        Y_C = 1.0
-        sig_F1 = (2 * inp.T1_Nmm * K_F * Y_eps * Y_C * Y_F1) / (0.85 * b * h_fe * d_f1)
+        sig_F1 = (2 * T1_Nmm * K_F * Y_eps * Y_C * Y_F1) / (0.85 * b * h_fe * d_f1)
         sig_F2 = sig_F1 * Y_F2 / Y_F1
 
         return {
-            "sig_F1": round(sig_F1, 2),
-            "sig_F2": round(sig_F2, 2),
-            "allow_F1": stress["sig_F1"],
-            "allow_F2": stress["sig_F2"],
-            "F1_ok": sig_F1 <= stress["sig_F1"],
-            "F2_ok": sig_F2 <= stress["sig_F2"],
+            "sig_F1": round(sig_F1, 2), "sig_F2": round(sig_F2, 2),
+            "allow_F1": sig_F1_allow,   "allow_F2": sig_F2_allow,
+            "F1_ok": sig_F1 <= sig_F1_allow,
+            "F2_ok": sig_F2 <= sig_F2_allow,
+            "K_F": K_F, "Y_eps": round(Y_eps, 4),
+            "Y_F1": round(Y_F1, 3), "Y_F2": round(Y_F2, 3),
+            "d_f1": round(d_f1, 2),
         }
+
+    # ------------------------------------------------------------------ #
+    #  Lực tác dụng
+    # ------------------------------------------------------------------ #
+    def calc_forces(self, T1_Nmm: float, geo: dict) -> dict:
+        d_m1 = geo["dm1"]
+        d1r  = math.radians(geo["delta1_deg"])
+        Ft = 2 * T1_Nmm / d_m1
+        Fr = Ft * math.tan(math.radians(20)) * math.cos(d1r)
+        Fa = Ft * math.tan(math.radians(20)) * math.sin(d1r)
+        return {
+            "Ft": round(Ft, 1),
+            "Fr": round(Fr, 1),
+            "Fa": round(Fa, 1),
+        }
+
+    # ------------------------------------------------------------------ #
+    #  Hàm tổng hợp
+    # ------------------------------------------------------------------ #
+    def run(self, u1: float, n1: float, T1_Nmm: float,
+            HB1: float = 250, HB2: float = 230,
+            S_H: float = 1.1, S_F: float = 1.75,
+            K_FC: float = 1.0) -> ConeGearResult:
+        stress = self.calc_allowable_stress(HB1, HB2, S_H, S_F, K_FC)
+        geo    = self.calc_geometry(u1, T1_Nmm, stress["sig_H"])
+        bend   = self.check_bending(T1_Nmm, geo, stress["sig_F1"], stress["sig_F2"])
+        forces = self.calc_forces(T1_Nmm, geo)
+
+        r = ConeGearResult()
+        r.sig_H  = stress["sig_H"]
+        r.sig_F1 = stress["sig_F1"]
+        r.sig_F2 = stress["sig_F2"]
+        r.Re_mm  = geo["Re"]
+        r.de1_mm = geo["de1"]
+        r.dm1_mm = geo["dm1"]
+        r.m_te   = geo["m_te"]
+        r.z1 = geo["z1"]; r.z2 = geo["z2"]
+        r.u_tt = geo["u_tt"]
+        r.delta_u_pct = geo["delta_u_pct"]
+        r.b_mm   = geo["b"]
+        r.delta1_deg = geo["delta1_deg"]
+        r.delta2_deg = geo["delta2_deg"]
+        r.sigma_F1_actual = bend["sig_F1"]
+        r.sigma_F2_actual = bend["sig_F2"]
+        r.F1_ok = bend["F1_ok"]
+        r.F2_ok = bend["F2_ok"]
+        r.Ft_N = forces["Ft"]
+        r.Fr_N = forces["Fr"]
+        r.Fa_N = forces["Fa"]
+        return r

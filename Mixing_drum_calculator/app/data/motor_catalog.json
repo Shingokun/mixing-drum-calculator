@@ -1,21 +1,39 @@
 [
   {
-    "id": "4A160M2",
-    "name": "4A160M2",
-    "rated_power_kw": 11.0,
-    "rated_rpm": 2935,
-    "cos_phi": 0.89,
-    "eta_motor": 0.88,
-    "mass_kg": 105
+    "id": "4A80A2",
+    "name": "4A80A2",
+    "rated_power_kw": 1.5,
+    "rated_rpm": 2850,
+    "cos_phi": 0.85,
+    "eta_motor": 0.81,
+    "mass_kg": 13
   },
   {
-    "id": "4A132M2",
-    "name": "4A132M2",
-    "rated_power_kw": 11.0,
-    "rated_rpm": 2900,
+    "id": "4A80B2",
+    "name": "4A80B2",
+    "rated_power_kw": 2.2,
+    "rated_rpm": 2850,
+    "cos_phi": 0.87,
+    "eta_motor": 0.83,
+    "mass_kg": 18
+  },
+  {
+    "id": "4A90L2",
+    "name": "4A90L2",
+    "rated_power_kw": 3,
+    "rated_rpm": 2840,
     "cos_phi": 0.88,
-    "eta_motor": 0.875,
-    "mass_kg": 87
+    "eta_motor": 0.84,
+    "mass_kg": 24
+  },
+  {
+    "id": "4A100S2",
+    "name": "4A100S2",
+    "rated_power_kw": 4,
+    "rated_rpm": 2880,
+    "cos_phi": 0.88,
+    "eta_motor": 0.845,
+    "mass_kg": 32
   },
   {
     "id": "4A100L2",
@@ -25,5 +43,176 @@
     "cos_phi": 0.88,
     "eta_motor": 0.855,
     "mass_kg": 36
+  },
+  {
+    "id": "4A112M2",
+    "name": "4A112M2",
+    "rated_power_kw": 7.5,
+    "rated_rpm": 2900,
+    "cos_phi": 0.88,
+    "eta_motor": 0.875,
+    "mass_kg": 54
+  },
+  {
+    "id": "4A132S2",
+    "name": "4A132S2",
+    "rated_power_kw": 7.5,
+    "rated_rpm": 2900,
+    "cos_phi": 0.88,
+    "eta_motor": 0.875,
+    "mass_kg": 60
+  },
+  {
+    "id": "4A132M2",
+    "name": "4A132M2",
+    "rated_power_kw": 11,
+    "rated_rpm": 2900,
+    "cos_phi": 0.88,
+    "eta_motor": 0.875,
+    "mass_kg": 87
+  },
+  {
+    "id": "4A160S2",
+    "name": "4A160S2",
+    "rated_power_kw": 15,
+    "rated_rpm": 2930,
+    "cos_phi": 0.89,
+    "eta_motor": 0.885,
+    "mass_kg": 97
+  },
+  {
+    "id": "4A160M2",
+    "name": "4A160M2",
+    "rated_power_kw": 18.5,
+    "rated_rpm": 2935,
+    "cos_phi": 0.89,
+    "eta_motor": 0.89,
+    "mass_kg": 105
+  },
+  {
+    "id": "4A180S2",
+    "name": "4A180S2",
+    "rated_power_kw": 22,
+    "rated_rpm": 2940,
+    "cos_phi": 0.9,
+    "eta_motor": 0.9,
+    "mass_kg": 148
+  },
+  {
+    "id": "4A180M2",
+    "name": "4A180M2",
+    "rated_power_kw": 30,
+    "rated_rpm": 2940,
+    "cos_phi": 0.9,
+    "eta_motor": 0.91,
+    "mass_kg": 180
+  },
+  {
+    "id": "4A200M2",
+    "name": "4A200M2",
+    "rated_power_kw": 37,
+    "rated_rpm": 2950,
+    "cos_phi": 0.9,
+    "eta_motor": 0.915,
+    "mass_kg": 230
+  },
+  {
+    "id": "4A200L2",
+    "name": "4A200L2",
+    "rated_power_kw": 45,
+    "rated_rpm": 2950,
+    "cos_phi": 0.91,
+    "eta_motor": 0.92,
+    "mass_kg": 265
+  },
+  {
+    "id": "4A225M2",
+    "name": "4A225M2",
+    "rated_power_kw": 55,
+    "rated_rpm": 2960,
+    "cos_phi": 0.91,
+    "eta_motor": 0.92,
+    "mass_kg": 340
+  },
+  {
+    "id": "4A80A4",
+    "name": "4A80A4",
+    "rated_power_kw": 1.1,
+    "rated_rpm": 1420,
+    "cos_phi": 0.81,
+    "eta_motor": 0.75,
+    "mass_kg": 16
+  },
+  {
+    "id": "4A90L4",
+    "name": "4A90L4",
+    "rated_power_kw": 2.2,
+    "rated_rpm": 1430,
+    "cos_phi": 0.83,
+    "eta_motor": 0.8,
+    "mass_kg": 27
+  },
+  {
+    "id": "4A100S4",
+    "name": "4A100S4",
+    "rated_power_kw": 3,
+    "rated_rpm": 1435,
+    "cos_phi": 0.83,
+    "eta_motor": 0.82,
+    "mass_kg": 34
+  },
+  {
+    "id": "4A100L4",
+    "name": "4A100L4",
+    "rated_power_kw": 4,
+    "rated_rpm": 1430,
+    "cos_phi": 0.84,
+    "eta_motor": 0.84,
+    "mass_kg": 40
+  },
+  {
+    "id": "4A112M4",
+    "name": "4A112M4",
+    "rated_power_kw": 5.5,
+    "rated_rpm": 1445,
+    "cos_phi": 0.85,
+    "eta_motor": 0.855,
+    "mass_kg": 54
+  },
+  {
+    "id": "4A132S4",
+    "name": "4A132S4",
+    "rated_power_kw": 7.5,
+    "rated_rpm": 1455,
+    "cos_phi": 0.86,
+    "eta_motor": 0.87,
+    "mass_kg": 70
+  },
+  {
+    "id": "4A132M4",
+    "name": "4A132M4",
+    "rated_power_kw": 11,
+    "rated_rpm": 1460,
+    "cos_phi": 0.87,
+    "eta_motor": 0.875,
+    "mass_kg": 93
+  },
+  {
+    "id": "4A160S4",
+    "name": "4A160S4",
+    "rated_power_kw": 15,
+    "rated_rpm": 1465,
+    "cos_phi": 0.88,
+    "eta_motor": 0.88,
+    "mass_kg": 120
+  },
+  {
+    "id": "4A160M4",
+    "name": "4A160M4",
+    "rated_power_kw": 18.5,
+    "rated_rpm": 1465,
+    "cos_phi": 0.88,
+    "eta_motor": 0.885,
+    "mass_kg": 140
   }
 ]
