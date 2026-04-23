@@ -124,39 +124,29 @@ class UC01ProjectPage(QWidget):
                 "font-size:11px; border: 1px solid #263748;")
 
     def _make_card(self, icon: str, title: str, desc: str,
-                   callback, variant: str) -> QFrame:
-        card = QFrame()
-        card.setStyleSheet("""
-            QFrame {
-                background-color: #162130;
-                border: 1px solid #263748;
-                border-radius: 10px;
-            }
-            QFrame:hover {
-                border: 1px solid #2E86DE;
-                background-color: #1C2B3A;
-            }
-        """)
+                   callback, variant: str) -> QWidget:
+        card = QWidget()
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
         layout.setAlignment(Qt.AlignTop)
 
-        ico = QLabel(icon)
-        ico.setStyleSheet("font-size: 32px; background:transparent;")
+        ico = QLabel(f"<div style='font-size:36px; text-align:center;'>{icon}</div>")
         ico.setAlignment(Qt.AlignCenter)
         layout.addWidget(ico)
 
         t = QLabel(title)
-        t.setStyleSheet("font-size:16px; font-weight:bold; color:#DFE6ED; background:transparent;")
+        t.setStyleSheet("font-size:16px; font-weight:bold; color:#DFE6ED;")
         t.setAlignment(Qt.AlignCenter)
         layout.addWidget(t)
 
         d = QLabel(desc)
-        d.setStyleSheet("font-size:12px; color:#7F8C8D; background:transparent;")
+        d.setStyleSheet("font-size:12px; color:#7F8C8D;")
         d.setAlignment(Qt.AlignCenter)
         d.setWordWrap(True)
         layout.addWidget(d)
+        
+        layout.addSpacing(8)
 
         btn = QPushButton(title)
         btn.setProperty("variant", variant)

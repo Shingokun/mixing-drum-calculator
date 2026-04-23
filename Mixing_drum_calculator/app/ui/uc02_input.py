@@ -111,7 +111,7 @@ class UC02InputPage(QWidget):
         self.err_summary.setProperty("type", "error")
         footer.addWidget(self.err_summary)
 
-        self.btn_confirm = QPushButton("✓  Xác nhận & Tiếp theo →")
+        self.btn_confirm = QPushButton("Xác nhận và Tiếp tục  →")
         self.btn_confirm.setFixedHeight(42)
         self.btn_confirm.clicked.connect(self._confirm)
         footer.addWidget(self.btn_confirm)
@@ -151,7 +151,7 @@ class UC02InputPage(QWidget):
         inp.u1                 = self.inp_u1.get_value()[1]
 
         self.session.uc02_done = True
-        self.mw.on_step_completed(2)
+        self.mw.on_step_completed(1)
 
     def refresh(self):
         inp = self.session.inputs

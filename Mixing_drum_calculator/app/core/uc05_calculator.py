@@ -140,9 +140,9 @@ class UC05Calculator:
     def run(self, u1: float, n1: float, T1_Nmm: float,
             HB1: float = 250, HB2: float = 230,
             S_H: float = 1.1, S_F: float = 1.75,
-            K_FC: float = 1.0) -> ConeGearResult:
+            K_FC: float = 1.0, z1_sb: int = 16) -> ConeGearResult:
         stress = self.calc_allowable_stress(HB1, HB2, S_H, S_F, K_FC)
-        geo    = self.calc_geometry(u1, T1_Nmm, stress["sig_H"])
+        geo    = self.calc_geometry(u1, T1_Nmm, stress["sig_H"], z1_sb=z1_sb)
         bend   = self.check_bending(T1_Nmm, geo, stress["sig_F1"], stress["sig_F2"])
         forces = self.calc_forces(T1_Nmm, geo)
 

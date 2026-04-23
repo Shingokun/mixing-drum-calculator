@@ -29,9 +29,15 @@ class UC03MotorPage(QWidget):
         self._build_ui()
 
     def _load_catalog(self):
-        path = os.path.normpath(
-            os.path.join(os.path.dirname(__file__), "..", "data", "motor_catalog.json")
-        )
+        # Khi chạy bằng PyInstaller, các file data sẽ vào thư mục sys._MEIPASS
+        import sys
+        if getattr(sys, 'frozen', False):
+            base_dir = sys._MEIPASS
+        else:
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        
+        path = os.path.normpath(os.path.join(base_dir, "app", "data", "motor_catalog.json"))
+        
         try:
             with open(path, encoding='utf-8') as f:
                 data = json.load(f)
@@ -129,7 +135,7 @@ class UC03MotorPage(QWidget):
         self.lbl_uch_real   = self._kv_row(gsel, "Tỉ số truyền chung thực tế")
         rl.addWidget(g_sel)
 
-        self.btn_confirm = QPushButton("✓  Chốt động cơ & Tiếp theo →")
+        self.btn_confirm = QPushButton("Xác nhận và Tiếp tục →")
         self.btn_confirm.setEnabled(False)
         self.btn_confirm.clicked.connect(self._confirm)
         rl.addWidget(self.btn_confirm)
@@ -174,6 +180,10 @@ class UC03MotorPage(QWidget):
             self.catalog, result.p_ct_kw, result.n_sb_rpm, tol_pct=15.0
         )
         self._fill_motor_table()
+
+        # Tự động chọn động cơ gợi ý đầu tiên để hiển thị bảng trục
+        if self.filtered:
+            self.motor_table.selectRow(0)
 
     def _fill_motor_table(self):
         self.motor_table.setRowCount(0)
@@ -251,7 +261,7 @@ class UC03MotorPage(QWidget):
         if not self._selected_motor:
             return
         self.session.uc03_done = True
-        self.mw.on_step_completed(3)
+        self.mw.on_step_completed(2)
 
     def refresh(self):
         m = self.session.motor

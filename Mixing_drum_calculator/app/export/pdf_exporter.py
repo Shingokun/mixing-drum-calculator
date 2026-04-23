@@ -14,6 +14,21 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from app.core.session import ProjectSession
 
+import os
+try:
+    # Đăng ký font hỗ trợ tiếng Việt (Arial)
+    if os.name == 'nt':
+        font_dir = "C:\\Windows\\Fonts"
+    else:
+        font_dir = "/Library/Fonts" # macOS fallback
+    pdfmetrics.registerFont(TTFont('Arial', os.path.join(font_dir, 'arial.ttf')))
+    pdfmetrics.registerFont(TTFont('Arial-Bold', os.path.join(font_dir, 'arialbd.ttf')))
+    FONT_REGULAR = 'Arial'
+    FONT_BOLD = 'Arial-Bold'
+except Exception:
+    FONT_REGULAR = 'Helvetica'
+    FONT_BOLD = 'Helvetica-Bold'
+
 # ── Màu chủ đạo ──────────────────────────────────────────
 DARK_BLUE  = colors.HexColor("#1E3A5F")
 MID_BLUE   = colors.HexColor("#2C6FAC")
@@ -29,16 +44,16 @@ def _styles():
     title = ParagraphStyle(
         "ReportTitle", fontSize=16, textColor=WHITE,
         alignment=TA_CENTER, spaceAfter=4,
-        fontName="Helvetica-Bold"
+        fontName=FONT_BOLD
     )
     section = ParagraphStyle(
         "SectionHdr", fontSize=12, textColor=WHITE,
         alignment=TA_LEFT, spaceBefore=12, spaceAfter=4,
-        fontName="Helvetica-Bold"
+        fontName=FONT_BOLD
     )
     body = ParagraphStyle(
         "Body", fontSize=9, textColor=colors.black,
-        alignment=TA_LEFT, fontName="Helvetica"
+        alignment=TA_LEFT, fontName=FONT_REGULAR
     )
     return title, section, body
 
@@ -49,9 +64,9 @@ def _param_table(data: list, col_widths=None):
         col_widths = [110*mm, 60*mm]
     t = Table(data, colWidths=col_widths)
     style = TableStyle([
-        ("FONTNAME",  (0,0), (-1,-1), "Helvetica"),
+        ("FONTNAME",  (0,0), (-1,-1), FONT_REGULAR),
         ("FONTSIZE",  (0,0), (-1,-1), 9),
-        ("FONTNAME",  (0,0), (0,-1), "Helvetica-Bold"),
+        ("FONTNAME",  (0,0), (0,-1), FONT_BOLD),
         ("BACKGROUND",(0,0), (-1,0), MID_BLUE),
         ("TEXTCOLOR", (0,0), (-1,0), WHITE),
         ("ALIGN",     (1,1), (1,-1), "RIGHT"),
@@ -82,7 +97,7 @@ def export_pdf(session: ProjectSession, filepath: str):
     title_tbl.setStyle(TableStyle([
         ("BACKGROUND", (0,0), (-1,-1), DARK_BLUE),
         ("TEXTCOLOR",  (0,0), (-1,-1), WHITE),
-        ("FONTNAME",   (0,0), (-1,-1), "Helvetica-Bold"),
+        ("FONTNAME",   (0,0), (-1,-1), FONT_BOLD),
         ("FONTSIZE",   (0,0), (-1,-1), 15),
         ("ALIGN",      (0,0), (-1,-1), "CENTER"),
         ("VALIGN",     (0,0), (-1,-1), "MIDDLE"),
@@ -186,7 +201,7 @@ def export_pdf(session: ProjectSession, filepath: str):
     color = GREEN if s.gearbox.strength_ok else RED
     t.setStyle(TableStyle([
         ("TEXTCOLOR", (1, row_idx), (1, row_idx), color),
-        ("FONTNAME",  (1, row_idx), (1, row_idx), "Helvetica-Bold"),
+        ("FONTNAME",  (1, row_idx), (1, row_idx), FONT_BOLD),
     ]))
     story.append(t)
 
@@ -198,7 +213,7 @@ def _section_hdr(text: str):
     tbl.setStyle(TableStyle([
         ("BACKGROUND", (0,0), (-1,-1), MID_BLUE),
         ("TEXTCOLOR",  (0,0), (-1,-1), WHITE),
-        ("FONTNAME",   (0,0), (-1,-1), "Helvetica-Bold"),
+        ("FONTNAME",   (0,0), (-1,-1), FONT_BOLD),
         ("FONTSIZE",   (0,0), (-1,-1), 11),
         ("ALIGN",      (0,0), (-1,-1), "LEFT"),
         ("TOPPADDING", (0,0), (-1,-1), 6),
