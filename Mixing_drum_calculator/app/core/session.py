@@ -1,28 +1,26 @@
 # ============================================================
 # session.py — Data Model trung tâm của toàn bộ ứng dụng
 # ============================================================
-from dataclasses import dataclass, field, asdict
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Optional, Dict
 import json, os
- 
- 
-@dataclass
-class InputParams:
-    power_kw: float = 6.5
-    rpm_out: float = 75.0
-    service_life_year: float = 10.0
-    eta_kn: float = 1.00
-    eta_ol: float = 0.99
-    eta_brc: float = 0.96
-    eta_brt: float = 0.97
-    eta_x: float = 0.91
-    u_h: float = 13.0
-    u_x: float = 3.0
-    u1: float = 3.45
- 
- 
-@dataclass
-class MotorResult:
+
+
+class InputParams(BaseModel):
+    power_kw: float = Field(default=6.5, gt=0, description="Công suất trên trục công tác (kW)")
+    rpm_out: float = Field(default=75.0, gt=0, description="Số vòng quay trục công tác (vg/ph)")
+    service_life_year: float = Field(default=10.0, gt=0)
+    eta_kn: float = Field(default=1.00, ge=0, le=1.0)
+    eta_ol: float = Field(default=0.99, ge=0, le=1.0)
+    eta_brc: float = Field(default=0.96, ge=0, le=1.0)
+    eta_brt: float = Field(default=0.97, ge=0, le=1.0)
+    eta_x: float = Field(default=0.91, ge=0, le=1.0)
+    u_h: float = Field(default=13.0, gt=0)
+    u_x: float = Field(default=3.0, gt=0)
+    u1: float = Field(default=3.45, gt=0)
+
+
+class MotorResult(BaseModel):
     selected_motor_id: str = ""
     motor_name: str = ""
     rated_power_kw: float = 0.0
@@ -34,13 +32,12 @@ class MotorResult:
     u_ch_actual: float = 0.0
     u_h_actual: float = 0.0
     u2: float = 0.0
-    shaft_powers: dict = field(default_factory=dict)
-    shaft_rpms: dict = field(default_factory=dict)
-    shaft_torques: dict = field(default_factory=dict)
- 
- 
-@dataclass
-class BeltResult:
+    shaft_powers: Dict[str, float] = Field(default_factory=dict)
+    shaft_rpms: Dict[str, float] = Field(default_factory=dict)
+    shaft_torques: Dict[str, float] = Field(default_factory=dict)
+
+
+class BeltResult(BaseModel):
     d1_mm: float = 0.0
     d2_mm: float = 0.0
     belt_velocity_ms: float = 0.0
@@ -51,10 +48,9 @@ class BeltResult:
     Ft_N: float = 0.0
     F0_N: float = 0.0
     velocity_ok: bool = True
- 
- 
-@dataclass
-class ConeGearResult:
+
+
+class ConeGearResult(BaseModel):
     # Ứng suất cho phép
     sig_H: float = 0.0
     sig_F1: float = 0.0
@@ -80,58 +76,40 @@ class ConeGearResult:
     Ft_N: float = 0.0
     Fr_N: float = 0.0
     Fa_N: float = 0.0
- 
- 
-@dataclass
-class GearboxResult:
-    cone: ConeGearResult = field(default_factory=ConeGearResult)
+
+
+class GearboxResult(BaseModel):
+    cone: ConeGearResult = Field(default_factory=ConeGearResult)
     strength_ok: bool = False
- 
- 
-@dataclass
-class ProjectSession:
-    inputs: InputParams = field(default_factory=InputParams)
-    motor: MotorResult = field(default_factory=MotorResult)
-    belt: BeltResult = field(default_factory=BeltResult)
-    gearbox: GearboxResult = field(default_factory=GearboxResult)
+
+
+class ProjectSession(BaseModel):
+    inputs: InputParams = Field(default_factory=InputParams)
+    motor: MotorResult = Field(default_factory=MotorResult)
+    belt: BeltResult = Field(default_factory=BeltResult)
+    gearbox: GearboxResult = Field(default_factory=GearboxResult)
     uc02_done: bool = False
     uc03_done: bool = False
     uc04_done: bool = False
     uc05_done: bool = False
     filepath: str = ""
- 
+
     def save(self, filepath: str):
         self.filepath = filepath
-        data = asdict(self)
+        # Sử dụng model_dump để chuyển thành dict (Pydantic v2)
+        data = self.model_dump()
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
- 
+
     @classmethod
     def load(cls, filepath: str) -> 'ProjectSession':
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        s = cls()
+        # Pydantic v2 tự động handle lồng nhau khi unpack dict
+        s = cls(**data)
         s.filepath = filepath
-        s.inputs = InputParams(**data.get('inputs', {}))
-        s.motor = MotorResult(**data.get('motor', {}))
-        br = data.get('belt', {})
-        s.belt = BeltResult(**br)
-        gb = data.get('gearbox', {})
-        cone_data = gb.pop('cone', {})
-        s.gearbox = GearboxResult(cone=ConeGearResult(**cone_data), **gb)
-        s.uc02_done = data.get('uc02_done', False)
-        s.uc03_done = data.get('uc03_done', False)
-        s.uc04_done = data.get('uc04_done', False)
-        s.uc05_done = data.get('uc05_done', False)
         return s
- 
+
     def reset(self):
-        self.inputs = InputParams()
-        self.motor = MotorResult()
-        self.belt = BeltResult()
-        self.gearbox = GearboxResult()
-        self.uc02_done = False
-        self.uc03_done = False
-        self.uc04_done = False
-        self.uc05_done = False
+        self.__init__()
         self.filepath = ""
