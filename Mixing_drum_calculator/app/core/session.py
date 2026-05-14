@@ -1,5 +1,5 @@
 # ============================================================
-# session.py — Data Model trung tâm của toàn bộ ứng dụng
+# session.py — Central Data Model
 # ============================================================
 from pydantic import BaseModel, Field
 from typing import Optional, Dict
@@ -7,8 +7,8 @@ import json, os
 
 
 class InputParams(BaseModel):
-    power_kw: float = Field(default=6.5, gt=0, description="Công suất trên trục công tác (kW)")
-    rpm_out: float = Field(default=75.0, gt=0, description="Số vòng quay trục công tác (vg/ph)")
+    power_kw: float = Field(default=6.5, gt=0, description="Output power at work shaft (kW)")
+    rpm_out: float = Field(default=75.0, gt=0, description="Output speed at work shaft (rpm)")
     service_life_year: float = Field(default=10.0, gt=0)
     eta_kn: float = Field(default=1.00, ge=0, le=1.0)
     eta_ol: float = Field(default=0.99, ge=0, le=1.0)
@@ -51,11 +51,11 @@ class BeltResult(BaseModel):
 
 
 class ConeGearResult(BaseModel):
-    # Ứng suất cho phép
+    # Allowable stress
     sig_H: float = 0.0
     sig_F1: float = 0.0
     sig_F2: float = 0.0
-    # Hình học
+    # Geometry
     Re_mm: float = 0.0
     de1_mm: float = 0.0
     dm1_mm: float = 0.0
@@ -67,12 +67,12 @@ class ConeGearResult(BaseModel):
     b_mm: float = 0.0
     delta1_deg: float = 0.0
     delta2_deg: float = 0.0
-    # Kiểm bền
+    # Strength check
     sigma_F1_actual: float = 0.0
     sigma_F2_actual: float = 0.0
     F1_ok: bool = False
     F2_ok: bool = False
-    # Lực tác dụng
+    # Forces
     Ft_N: float = 0.0
     Fr_N: float = 0.0
     Fa_N: float = 0.0
@@ -96,7 +96,6 @@ class ProjectSession(BaseModel):
 
     def save(self, filepath: str):
         self.filepath = filepath
-        # Sử dụng model_dump để chuyển thành dict (Pydantic v2)
         data = self.model_dump()
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -105,7 +104,6 @@ class ProjectSession(BaseModel):
     def load(cls, filepath: str) -> 'ProjectSession':
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        # Pydantic v2 tự động handle lồng nhau khi unpack dict
         s = cls(**data)
         s.filepath = filepath
         return s

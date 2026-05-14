@@ -1,5 +1,5 @@
 # ============================================================
-# main_window.py — Cửa sổ chính (Wizard Form)
+# main_window.py — Main Window (Wizard Form)
 # ============================================================
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
@@ -11,7 +11,8 @@ from PySide6.QtGui import QIcon, QFont
 
 from app.core.session import ProjectSession
 from app.ui.style import GLOBAL_STYLE
-from app.ui.uc01_project  import UC01ProjectPage
+from app.ui.i18n import _, tr
+from app.ui.uc01_project   import UC01ProjectPage
 from app.ui.uc02_input    import UC02InputPage
 from app.ui.uc03_motor    import UC03MotorPage
 from app.ui.uc04_belt     import UC04BeltPage
@@ -19,30 +20,11 @@ from app.ui.uc05_gearbox  import UC05GearboxPage
 from app.ui.uc06_report   import UC06ReportPage
 
 
-NAV_ITEMS = [
-    ("🏠", "Quản lý Dự án",        "UC01"),
-    ("📥", "Nhập Thông số",         "UC02"),
-    ("⚙️", "Chọn Động cơ",          "UC03"),
-    ("🔄", "Bộ truyền Đai",         "UC04"),
-    ("🔩", "Hộp Giảm tốc",          "UC05"),
-    ("📊", "Xuất Báo cáo",          "UC06"),
-]
-
-# Map UC index → bước prerequisite phải hoàn thành
-LOCK_MAP = {
-    1: None,           # UC02: cần uc02_done → False → unlock after UC01 new
-    2: "uc02_done",
-    3: "uc03_done",
-    4: "uc04_done",
-    5: "uc04_done",
-}
-
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.session = ProjectSession()
-        self.setWindowTitle("Hệ thống Dẫn động Thùng trộn")
+        self.setWindowTitle(_("app_title"))
         self.setMinimumSize(1180, 720)
         self.resize(1280, 800)
         self.setStyleSheet(GLOBAL_STYLE)
@@ -64,33 +46,37 @@ class MainWindow(QMainWindow):
         sb_layout.setContentsMargins(0, 0, 0, 0)
         sb_layout.setSpacing(0)
 
-        # Logo / brand strip
-        brand = QLabel("  ⚙ HTDĐ Thùng trộn ")
-        brand.setFixedHeight(60)
-        brand.setStyleSheet(
+        # Brand header
+        self.brand_lbl = QLabel(_("brand"))
+        self.brand_lbl.setFixedHeight(60)
+        self.brand_lbl.setStyleSheet(
             "background:#071020; color:#2E86DE; font-size:15px;"
             "font-weight:bold; border-bottom:2px solid #263748;"
             "padding-left:16px;"
         )
-        sb_layout.addWidget(brand)
+        sb_layout.addWidget(self.brand_lbl)
 
-        # Nav list
+        # Navigation list
         self.nav = QListWidget()
         self.nav.setFocusPolicy(Qt.NoFocus)
         self.nav.setSpacing(2)
         self._nav_items: list[QListWidgetItem] = []
-
-        for icon, label, code in NAV_ITEMS:
-            item = QListWidgetItem(f"  {icon}  {label}")
-            item.setSizeHint(QSize(220, 52))
-            self.nav.addItem(item)
-            self._nav_items.append(item)
+        self._init_nav_items()
 
         self.nav.currentRowChanged.connect(self._on_nav_changed)
         sb_layout.addWidget(self.nav, 1)
 
-        # Save shortcut at bottom
-        self.btn_save_sb = QPushButton("💾  Lưu dự án")
+        # Language Toggle button
+        self.btn_lang = QPushButton(_("lang_toggle"))
+        self.btn_lang.setProperty("variant", "secondary")
+        self.btn_lang.style().unpolish(self.btn_lang)
+        self.btn_lang.style().polish(self.btn_lang)
+        self.btn_lang.setStyleSheet("margin: 4px 12px; border-radius:6px;")
+        self.btn_lang.clicked.connect(self._toggle_language)
+        sb_layout.addWidget(self.btn_lang)
+
+        # Quick save button
+        self.btn_save_sb = QPushButton("💾 " + _("save_project"))
         self.btn_save_sb.setProperty("variant", "secondary")
         self.btn_save_sb.style().unpolish(self.btn_save_sb)
         self.btn_save_sb.style().polish(self.btn_save_sb)
@@ -126,19 +112,66 @@ class MainWindow(QMainWindow):
 
         main_layout.addWidget(self.stack, 1)
 
-        # Start at trang đầu
+        # Initialize navigation
         self.nav.setCurrentRow(0)
         self._update_nav_state()
 
+    def _init_nav_items(self):
+        self.nav.clear()
+        self._nav_items = []
+        nav_data = [
+            ("🏠", "nav_uc01"),
+            ("📥", "nav_uc02"),
+            ("⚙️", "nav_uc03"),
+            ("🔄", "nav_uc04"),
+            ("🔩", "nav_uc05"),
+            ("📊", "nav_uc06"),
+        ]
+        for icon, key in nav_data:
+            item = QListWidgetItem(f"  {icon}  {_(key)}")
+            item.setSizeHint(QSize(220, 52))
+            self.nav.addItem(item)
+            self._nav_items.append(item)
+
+    def _toggle_language(self):
+        new_lang = "vi" if tr.get_lang() == "en" else "en"
+        tr.set_lang(new_lang)
+        self.retranslate_ui()
+
+    def retranslate_ui(self):
+        self.setWindowTitle(_("app_title"))
+        self.brand_lbl.setText(_("brand"))
+        self.btn_lang.setText(_("lang_toggle"))
+        self.btn_save_sb.setText("💾 " + _("save_project"))
+        
+        current_row = self.nav.currentRow()
+        self._init_nav_items()
+        self.nav.setCurrentRow(current_row)
+        self._update_nav_state()
+        
+        # Trigger retranslate on child pages
+        for i in range(self.stack.count()):
+            page = self.stack.widget(i)
+            if hasattr(page, "retranslate_ui"):
+                page.retranslate_ui()
+
     # ─── Navigation logic ─────────────────────────────────
     def _on_nav_changed(self, idx: int):
-        req_attr = LOCK_MAP.get(idx)
+        # Map UC index → prerequisite step that must be completed
+        lock_map = {
+            1: None,
+            2: "uc02_done",
+            3: "uc03_done",
+            4: "uc04_done",
+            5: "uc04_done",
+        }
+        req_attr = lock_map.get(idx)
         if req_attr and not getattr(self.session, req_attr, False):
             QMessageBox.warning(
-                self, "Chưa hoàn thành",
-                "Vui lòng hoàn thành bước trước đó trước khi tiếp tục."
+                self, _("incomplete_step"),
+                _("incomplete_msg")
             )
-            # Revert selection (avoid recursion with blockSignals)
+            # Revert selection
             self.nav.blockSignals(True)
             self.nav.setCurrentRow(self.stack.currentIndex())
             self.nav.blockSignals(False)
@@ -146,54 +179,52 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentIndex(idx)
 
     def _update_nav_state(self):
-        """Dim/enable nav items theo trạng thái session"""
+        """Enable/disable nav items based on session state"""
         states = [
-            True,                       # UC01 luôn accessible
-            True,                       # UC02 luôn accessible
+            True,                       # UC01 always accessible
+            True,                       # UC02 always accessible
             self.session.uc02_done,
             self.session.uc03_done,
             self.session.uc04_done,
             self.session.uc04_done,
         ]
+        nav_keys = ["nav_uc01", "nav_uc02", "nav_uc03", "nav_uc04", "nav_uc05", "nav_uc06"]
+        nav_icons = ["🏠", "📥", "⚙️", "🔄", "🔩", "📊"]
+        
         for i, (item, enabled) in enumerate(zip(self._nav_items, states)):
             flags = item.flags()
             if enabled:
                 item.setFlags(flags | Qt.ItemIsEnabled | Qt.ItemIsSelectable)
             else:
                 item.setFlags(flags & ~Qt.ItemIsEnabled & ~Qt.ItemIsSelectable)
-            # Visual cue: checkmark on done steps
-            icon_map = ["🏠", "📥", "⚙️", "🔄", "🔩", "📊"]
+
+            # Status checkmarks
             done_flags = [False, self.session.uc02_done, self.session.uc03_done,
                           self.session.uc04_done, self.session.uc05_done, False]
             prefix = "✓ " if done_flags[i] else "   "
-            label = NAV_ITEMS[i][1]
-            icon  = NAV_ITEMS[i][0]
+            label = _(nav_keys[i])
+            icon  = nav_icons[i]
             item.setText(f" {prefix}{icon}  {label}")
 
-    # ─── Called by child pages when step is done ──────────
     def on_step_completed(self, step_page_idx: int):
-        """
-        step_page_idx: index trong stack (0=UC01, 1=UC02, …)
-        Sau khi hoàn thành, tự động chuyển sang trang tiếp.
-        """
+        """Called by child pages when a step is finished"""
         self._update_nav_state()
         self.page_uc01.refresh()
 
         next_idx = min(step_page_idx + 1, self.stack.count() - 1)
-        # Nếu trang tiếp đã unlock thì chuyển
-        req = LOCK_MAP.get(next_idx)
+        lock_map = {1: None, 2: "uc02_done", 3: "uc03_done", 4: "uc04_done", 5: "uc04_done"}
+        req = lock_map.get(next_idx)
         if req is None or getattr(self.session, req, False):
             self.nav.blockSignals(True)
             self.nav.setCurrentRow(next_idx)
             self.nav.blockSignals(False)
             self.stack.setCurrentIndex(next_idx)
 
-        # Nếu chuyển sang UC06, refresh report
         if next_idx == 5:
             self.page_uc06.refresh()
 
     def refresh_all(self):
-        """Refresh toàn bộ sau khi load file"""
+        """Refresh all pages after loading a project file"""
         self._update_nav_state()
         for page in [self.page_uc01, self.page_uc02, self.page_uc03,
                      self.page_uc04, self.page_uc05]:
@@ -203,25 +234,23 @@ class MainWindow(QMainWindow):
             self.page_uc06.refresh()
 
     def _quick_save(self):
-        """Lưu nhanh (nếu đã có filepath) hoặc mở dialog"""
+        """Quick save or open save dialog"""
         if self.session.filepath:
             try:
                 self.session.save(self.session.filepath)
-                # Flash button color
-                self.btn_save_sb.setText("✅ Đã lưu!")
+                self.btn_save_sb.setText("✅ " + _("saved_success"))
                 from PySide6.QtCore import QTimer
-                QTimer.singleShot(1500, lambda: self.btn_save_sb.setText("💾  Lưu dự án"))
+                QTimer.singleShot(1500, lambda: self.btn_save_sb.setText("💾 " + _("save_project")))
             except Exception as e:
-                QMessageBox.critical(self, "Lỗi", str(e))
+                QMessageBox.critical(self, _("error"), str(e))
         else:
             self.page_uc01._save_project()
 
-    # ─── Window close ────────────────────────────────────
     def closeEvent(self, event):
         if self.session.uc02_done:
             reply = QMessageBox.question(
-                self, "Thoát ứng dụng",
-                "Bạn có muốn lưu dự án trước khi thoát không?",
+                self, _("exit_app"),
+                _("exit_save_msg"),
                 QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
             )
             if reply == QMessageBox.Save:

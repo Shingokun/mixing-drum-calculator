@@ -1,26 +1,15 @@
-﻿# ============================================================
-# uc05_gearbox.py — Tính hộp giảm tốc bánh răng côn cấp nhanh
+# ============================================================
+# uc05_gearbox.py — Bevel Gearbox Design
 # ============================================================
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QGroupBox, QComboBox, QFrame, QSplitter, QScrollArea,
-    QDoubleSpinBox, QSpinBox
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QPushButton, QGroupBox, QFrame, QScrollArea
 )
-from PySide6.QtCore import Qt
-from app.core.session import ProjectSession, GearboxResult
+from PySide6.QtCore import Qt, Signal
+from app.core.session import ProjectSession
 from app.core.uc05_calculator import UC05Calculator
 from app.ui.widgets.param_input import ResultRow
-
-
-# Vật liệu mặc định
-MATERIALS = {
-    "Thép 45 (tôi cải thiện) — HB 180–230": (205, 190, 1.1, 1.75),
-    "Thép 40X (tôi cải thiện) — HB 235–262": (248, 235, 1.1, 1.75),
-    "Thép 40XH (tôi cải thiện) — HB 260–280": (270, 255, 1.1, 1.75),
-    "Thép 40X (tôi bề mặt) — HB 45–50 HRC":  (320, 300, 1.2, 1.75),
-    "Nhập thủ công": None,
-}
-
+from app.ui.i18n import _
 
 class UC05GearboxPage(QWidget):
     def __init__(self, session: ProjectSession, main_window, parent=None):
@@ -35,290 +24,107 @@ class UC05GearboxPage(QWidget):
         root.setContentsMargins(40, 30, 40, 30)
         root.setSpacing(0)
 
-        hdr = QLabel("Bước 4 · Tính Hộp Giảm Tốc (Bánh răng Côn)")
-        hdr.setProperty("type", "title")
-        root.addWidget(hdr)
-        sub = QLabel("Tính thông số hình học và kiểm bền uốn, tiếp xúc cho bánh răng côn cấp nhanh.")
-        sub.setProperty("type", "subtitle")
-        root.addWidget(sub)
+        self.hdr = QLabel(_("uc05_hdr"))
+        self.hdr.setProperty("type", "title")
+        root.addWidget(self.hdr)
+        self.sub = QLabel(_("uc05_sub"))
+        self.sub.setProperty("type", "subtitle")
+        root.addWidget(self.sub)
         root.addSpacing(20)
 
-        splitter = QSplitter(Qt.Horizontal)
-        splitter.setHandleWidth(2)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        content = QWidget()
+        cl = QVBoxLayout(content)
+        cl.setSpacing(20)
 
-        # ── Panel trái: Chọn vật liệu & thông số ──────
-        left = QWidget()
-        ll = QVBoxLayout(left)
-        ll.setContentsMargins(0, 0, 12, 0)
-        ll.setSpacing(14)
+        # Allowable Stresses
+        self.g_stress = QGroupBox(_("g_allow_stress"))
+        gsl = QVBoxLayout(self.g_stress)
+        self.res_sig_h  = ResultRow("lbl_sig_h", "unit_mpa")
+        self.res_sig_f1 = ResultRow("lbl_sig_f1", "unit_mpa")
+        self.res_sig_f2 = ResultRow("lbl_sig_f2", "unit_mpa")
+        for w in [self.res_sig_h, self.res_sig_f1, self.res_sig_f2]: gsl.addWidget(w)
+        cl.addWidget(self.g_stress)
 
-        # Thông số đầu vào
-        g_in = QGroupBox("📥  Dữ liệu đầu vào (từ UC03)")
-        gl = QVBoxLayout(g_in)
-        gl.setSpacing(8)
-        self.lbl_u1 = self._kv(gl, "Tỉ số truyền cấp nhanh  u₁")
-        self.lbl_n1 = self._kv(gl, "Tốc độ trục I  n₁", "vg/ph")
-        self.lbl_T1 = self._kv(gl, "Momen trục I  T₁",  "N·mm")
-        ll.addWidget(g_in)
+        # Geometry
+        self.g_geo = QGroupBox(_("g_gear_geo"))
+        ggl = QVBoxLayout(self.g_geo)
+        self.res_re    = ResultRow("lbl_re", "unit_mm")
+        self.res_mte   = ResultRow("lbl_mte", "")
+        self.res_z1z2  = ResultRow("lbl_z1z2", "")
+        self.res_u_tt  = ResultRow("lbl_u_gear", "")
+        self.res_delta = ResultRow("lbl_delta_u", "%")
+        self.res_b     = ResultRow("lbl_b_width", "unit_mm")
+        for w in [self.res_re, self.res_mte, self.res_z1z2, self.res_u_tt, self.res_delta, self.res_b]: ggl.addWidget(w)
+        cl.addWidget(self.g_geo)
 
-        # Chọn vật liệu
-        g_mat = QGroupBox("🔩  Chọn vật liệu bánh răng")
-        gml = QVBoxLayout(g_mat)
-        gml.setSpacing(10)
+        # Strength Check
+        self.g_check = QGroupBox(_("g_strength_check"))
+        gcl = QVBoxLayout(self.g_check)
+        self.res_check_f1 = ResultRow("lbl_check_f1", "")
+        self.res_check_f2 = ResultRow("lbl_check_f2", "")
+        for w in [self.res_check_f1, self.res_check_f2]: gcl.addWidget(w)
+        cl.addWidget(self.g_check)
 
-        mat_lbl = QLabel("Vật liệu bánh răng:")
-        mat_lbl.setStyleSheet("color:#7F8C8D;")
-        self.combo_mat = QComboBox()
-        self.combo_mat.addItems(list(MATERIALS.keys()))
-        self.combo_mat.currentIndexChanged.connect(self._on_material_changed)
-        gml.addWidget(mat_lbl)
-        gml.addWidget(self.combo_mat)
+        # Forces
+        self.g_forces = QGroupBox(_("g_forces"))
+        gfl = QVBoxLayout(self.g_forces)
+        self.res_ft = ResultRow("lbl_ft", "unit_n")
+        self.res_fr = ResultRow("lbl_fr", "unit_n")
+        self.res_fa = ResultRow("lbl_fa", "unit_n")
+        for w in [self.res_ft, self.res_fr, self.res_fa]: gfl.addWidget(w)
+        cl.addWidget(self.g_forces)
 
-        # HB thủ công
-        self.manual_frame = QFrame()
-        mfl = QHBoxLayout(self.manual_frame)
-        mfl.setContentsMargins(0, 0, 0, 0)
-        mfl.setSpacing(12)
+        scroll.setWidget(content)
+        root.addWidget(scroll, 1)
 
-        mfl.addWidget(QLabel("HB₁:"))
-        self.spin_HB1 = QDoubleSpinBox()
-        self.spin_HB1.setRange(150, 400); self.spin_HB1.setValue(250)
-        mfl.addWidget(self.spin_HB1)
-
-        mfl.addWidget(QLabel("HB₂:"))
-        self.spin_HB2 = QDoubleSpinBox()
-        self.spin_HB2.setRange(150, 400); self.spin_HB2.setValue(230)
-        mfl.addWidget(self.spin_HB2)
-        mfl.addStretch()
-        self.manual_frame.setVisible(False)
-        gml.addWidget(self.manual_frame)
-
-        # Thêm hệ số
-        row_sf = QHBoxLayout()
-        row_sf.addWidget(QLabel("S_H:"))
-        self.spin_SH = QDoubleSpinBox()
-        self.spin_SH.setRange(0.5, 3.0); self.spin_SH.setSingleStep(0.05)
-        self.spin_SH.setValue(1.1)
-        row_sf.addWidget(self.spin_SH)
-        row_sf.addWidget(QLabel("S_F:"))
-        self.spin_SF = QDoubleSpinBox()
-        self.spin_SF.setRange(0.5, 3.0); self.spin_SF.setSingleStep(0.05)
-        self.spin_SF.setValue(1.75)
-        row_sf.addWidget(self.spin_SF)
-        row_sf.addStretch()
-        gml.addLayout(row_sf)
-
-        row_z1 = QHBoxLayout()
-        row_z1.addWidget(QLabel("Số răng sơ bộ z₁_sb:"))
-        self.spin_z1sb = QSpinBox()
-        self.spin_z1sb.setRange(10, 30); self.spin_z1sb.setValue(16)
-        row_z1.addWidget(self.spin_z1sb)
-        row_z1.addStretch()
-        gml.addLayout(row_z1)
-
-        ll.addWidget(g_mat)
-
-        self.btn_calc = QPushButton("🔄  Tính toán kiểm bền")
-        self.btn_calc.clicked.connect(self._calculate)
-        ll.addWidget(self.btn_calc)
-        ll.addStretch()
-        splitter.addWidget(left)
-
-        # ── Panel phải: Kết quả ────────────────────────
-        right_scroll = QScrollArea()
-        right_scroll.setWidgetResizable(True)
-        right_scroll.setFrameShape(QFrame.NoFrame)
-        right = QWidget()
-        rl = QVBoxLayout(right)
-        rl.setContentsMargins(12, 0, 0, 0)
-        rl.setSpacing(14)
-
-        # Ứng suất cho phép
-        g_stress = QGroupBox("⚡  Ứng suất cho phép")
-        gsl = QVBoxLayout(g_stress)
-        gsl.setSpacing(6)
-        self.r_sigH  = ResultRow("[σ_H] tiếp xúc cho phép",  "MPa")
-        self.r_sigF1 = ResultRow("[σ_F1] uốn cho phép bánh nhỏ", "MPa")
-        self.r_sigF2 = ResultRow("[σ_F2] uốn cho phép bánh lớn", "MPa")
-        for w in [self.r_sigH, self.r_sigF1, self.r_sigF2]:
-            gsl.addWidget(w)
-        rl.addWidget(g_stress)
-
-        # Thông số hình học
-        g_geo = QGroupBox("📐  Thông số hình học")
-        ggl = QVBoxLayout(g_geo)
-        ggl.setSpacing(6)
-        self.r_Re   = ResultRow("Chiều dài côn ngoài  R_e",   "mm")
-        self.r_de1  = ResultRow("Đường kính vòng chia ngoài d_e1", "mm")
-        self.r_mte  = ResultRow("Mô đun ngoài tiêu chuẩn  m_te",   "mm")
-        self.r_z1   = ResultRow("Số răng bánh nhỏ  z₁",       "")
-        self.r_z2   = ResultRow("Số răng bánh lớn  z₂",       "")
-        self.r_utt  = ResultRow("Tỉ số truyền thực tế  u_tt", "")
-        self.r_du   = ResultRow("Sai lệch tỉ số truyền  Δu",  "%")
-        self.r_b    = ResultRow("Chiều rộng vành răng  b",    "mm")
-        self.r_d1   = ResultRow("Góc côn chia  δ₁ / δ₂",     "°")
-        for w in [self.r_Re, self.r_de1, self.r_mte, self.r_z1, self.r_z2,
-                  self.r_utt, self.r_du, self.r_b, self.r_d1]:
-            sep = QFrame(); sep.setFrameShape(QFrame.HLine)
-            ggl.addWidget(sep); ggl.addWidget(w)
-        rl.addWidget(g_geo)
-
-        # Kiểm bền
-        g_check = QGroupBox("🔍  Kiểm tra độ bền")
-        gck = QVBoxLayout(g_check)
-        gck.setSpacing(8)
-        self.r_sF1_act = ResultRow("σ_F1 thực tế / cho phép",   "MPa")
-        self.r_sF2_act = ResultRow("σ_F2 thực tế / cho phép",   "MPa")
-        self.r_Ft      = ResultRow("Lực vòng  F_t",              "N")
-        self.r_Fr      = ResultRow("Lực hướng tâm  F_r",         "N")
-        self.r_Fa      = ResultRow("Lực dọc trục  F_a",          "N")
-        for w in [self.r_sF1_act, self.r_sF2_act, self.r_Ft, self.r_Fr, self.r_Fa]:
-            gck.addWidget(w)
-
-        self.lbl_verdict = QLabel("")
-        self.lbl_verdict.setAlignment(Qt.AlignCenter)
-        self.lbl_verdict.setVisible(False)
-        gck.addWidget(self.lbl_verdict)
-        rl.addWidget(g_check)
-
-        self.btn_confirm = QPushButton("Xác nhận và Tiếp tục →")
-        self.btn_confirm.setEnabled(False)
+        self.btn_confirm = QPushButton(_("confirm_next"))
         self.btn_confirm.clicked.connect(self._confirm)
-        rl.addWidget(self.btn_confirm)
-        rl.addStretch()
+        root.addWidget(self.btn_confirm)
 
-        right_scroll.setWidget(right)
-        splitter.addWidget(right_scroll)
-        splitter.setSizes([360, 620])
-        root.addWidget(splitter, 1)
-
-    def _kv(self, layout, label: str, unit: str = "") -> QLabel:
-        row = QHBoxLayout()
-        l = QLabel(label + ":"); l.setFixedWidth(220); l.setStyleSheet("color:#7F8C8D;")
-        v = QLabel("—"); v.setStyleSheet("font-weight:bold; color:#54A0FF;")
-        u = QLabel(unit); u.setStyleSheet("color:#3D5166; font-size:11px;")
-        row.addWidget(l); row.addWidget(v); row.addWidget(u); row.addStretch()
-        layout.addLayout(row)
-        return v
-
-    def _on_material_changed(self, idx: int):
-        mat_name = self.combo_mat.currentText()
-        is_manual = (mat_name == "Nhập thủ công")
-        self.manual_frame.setVisible(is_manual)
-        if not is_manual:
-            val = MATERIALS[mat_name]
-            if val:
-                HB1, HB2, SH, SF = val
-                self.spin_HB1.setValue(HB1)
-                self.spin_HB2.setValue(HB2)
-                self.spin_SH.setValue(SH)
-                self.spin_SF.setValue(SF)
-
-    def _get_HB(self):
-        return self.spin_HB1.value(), self.spin_HB2.value()
-
-    def _calculate(self):
-        m = self.session.motor
-        p = self.session.inputs
-        u1 = p.u1
-        n1 = m.shaft_rpms.get('I', 0)
-        T1 = m.shaft_torques.get('I', 0)
-
-        self.lbl_u1.setText(f"{u1:.2f}")
-        self.lbl_n1.setText(f"{n1:.2f}")
-        self.lbl_T1.setText(f"{T1:.2f}")
-
-        HB1, HB2 = self._get_HB()
-        S_H = self.spin_SH.value()
-        S_F = self.spin_SF.value()
-        z1_sb = self.spin_z1sb.value()
-
-        cone = self.calc.run(u1, n1, T1, HB1, HB2, S_H, S_F, z1_sb=z1_sb)
-        gb = GearboxResult()
-        gb.cone = cone
-        gb.strength_ok = cone.F1_ok and cone.F2_ok
-        self.session.gearbox = gb
-
-        # Ứng suất cho phép
-        self.r_sigH.set_value(cone.sig_H, 2)
-        self.r_sigF1.set_value(cone.sig_F1, 2)
-        self.r_sigF2.set_value(cone.sig_F2, 2)
-
-        # Hình học
-        self.r_Re.set_value(cone.Re_mm, 2)
-        self.r_de1.set_value(cone.de1_mm, 2)
-        self.r_mte.set_value(cone.m_te, 2)
-        self.r_z1.set_value(cone.z1, 0)
-        self.r_z2.set_value(cone.z2, 0)
-        self.r_utt.set_value(cone.u_tt, 4)
-        self.r_du.set_value(cone.delta_u_pct, 2)
-        self.r_b.set_value(cone.b_mm, 2)
-        self.r_d1.set_value(f"{cone.delta1_deg:.3f}° / {cone.delta2_deg:.3f}°")
-
-        # Kiểm bền
-        self.r_sF1_act.set_value(
-            f"{cone.sigma_F1_actual:.2f} / {cone.sig_F1:.2f}"
-        )
-        self.r_sF1_act.set_badge(cone.F1_ok)
-        self.r_sF2_act.set_value(
-            f"{cone.sigma_F2_actual:.2f} / {cone.sig_F2:.2f}"
-        )
-        self.r_sF2_act.set_badge(cone.F2_ok)
-
-        self.r_Ft.set_value(cone.Ft_N, 1)
-        self.r_Fr.set_value(cone.Fr_N, 1)
-        self.r_Fa.set_value(cone.Fa_N, 1)
-
-        # Verdict
-        self.lbl_verdict.setVisible(True)
-        if gb.strength_ok:
-            self.lbl_verdict.setText("✓  Bánh răng đủ bền — Kiểm bền uốn ĐẠT")
-            self.lbl_verdict.setStyleSheet(
-                "color:#10AC84; font-weight:bold; font-size:14px;"
-                "background:#0D2B1F; border-radius:6px; padding:10px;"
-            )
-            self.btn_confirm.setEnabled(True)
-        else:
-            msgs = []
-            if not cone.F1_ok:
-                msgs.append(f"σ_F1 = {cone.sigma_F1_actual:.2f} > [{cone.sig_F1:.2f}]")
-            if not cone.F2_ok:
-                msgs.append(f"σ_F2 = {cone.sigma_F2_actual:.2f} > [{cone.sig_F2:.2f}]")
-            self.lbl_verdict.setText(
-                "✗  KHÔNG ĐẠT — " + "  |  ".join(msgs) +
-                "\n→ Điều chỉnh vật liệu hoặc hệ số chiều rộng vành răng"
-            )
-            self.lbl_verdict.setStyleSheet(
-                "color:#EE5A24; font-weight:bold; font-size:13px;"
-                "background:#2B1510; border-radius:6px; padding:10px;"
-            )
-            self.btn_confirm.setEnabled(False)
-
-    def _confirm(self):
-        self.session.uc05_done = True
-        self.mw.on_step_completed(4)
+    def retranslate_ui(self):
+        self.hdr.setText(_("uc05_hdr"))
+        self.sub.setText(_("uc05_sub"))
+        self.g_stress.setTitle(_("g_allow_stress"))
+        self.g_geo.setTitle(_("g_gear_geo"))
+        self.g_check.setTitle(_("g_strength_check"))
+        self.g_forces.setTitle(_("g_forces"))
+        self.btn_confirm.setText(_("confirm_next"))
+        for w in [self.res_sig_h, self.res_sig_f1, self.res_sig_f2, self.res_re,
+                  self.res_mte, self.res_z1z2, self.res_u_tt, self.res_delta,
+                  self.res_b, self.res_check_f1, self.res_check_f2, self.res_ft,
+                  self.res_fr, self.res_fa]:
+            w.retranslate_ui()
+        self.refresh()
 
     def refresh(self):
-        gb = self.session.gearbox
-        c = gb.cone
-        if c.Re_mm:
-            self.r_Re.set_value(c.Re_mm, 2)
-            self.r_de1.set_value(c.de1_mm, 2)
-            self.r_mte.set_value(c.m_te, 2)
-            self.r_z1.set_value(c.z1, 0)
-            self.r_z2.set_value(c.z2, 0)
-            self.r_utt.set_value(c.u_tt, 4)
-            self.r_du.set_value(c.delta_u_pct, 2)
-            self.r_b.set_value(c.b_mm, 2)
-            self.r_d1.set_value(f"{c.delta1_deg:.3f}° / {c.delta2_deg:.3f}°")
-            self.r_sigH.set_value(c.sig_H, 2)
-            self.r_sigF1.set_value(c.sig_F1, 2)
-            self.r_sigF2.set_value(c.sig_F2, 2)
-            self.r_sF1_act.set_value(f"{c.sigma_F1_actual:.2f} / {c.sig_F1:.2f}")
-            self.r_sF1_act.set_badge(c.F1_ok)
-            self.r_sF2_act.set_value(f"{c.sigma_F2_actual:.2f} / {c.sig_F2:.2f}")
-            self.r_sF2_act.set_badge(c.F2_ok)
-            self.r_Ft.set_value(c.Ft_N, 1)
-            self.r_Fr.set_value(c.Fr_N, 1)
-            self.r_Fa.set_value(c.Fa_N, 1)
-            self.btn_confirm.setEnabled(gb.strength_ok)
+        if not self.session.uc03_done: return
+        m = self.session.motor
+        res = self.calc.run(m.u_h_actual, m.shaft_rpms['I'], m.shaft_torques['I'])
+        self.session.gearbox.cone = res
+        self.session.uc05_done = True
+
+        self.res_sig_h.set_value(res.sig_H, 2)
+        self.res_sig_f1.set_value(res.sig_F1, 2)
+        self.res_sig_f2.set_value(res.sig_F2, 2)
+
+        self.res_re.set_value(res.Re_mm, 2)
+        self.res_mte.set_value(res.m_te, 1)
+        self.res_z1z2.set_value(f"{res.z1} / {res.z2}")
+        self.res_u_tt.set_value(res.u_tt, 4)
+        self.res_delta.set_value(res.delta_u_pct, 2)
+        self.res_b.set_value(res.b_mm, 2)
+
+        self.res_check_f1.set_value(f"{res.sigma_F1_actual:.2f} <= {res.sig_F1:.2f}")
+        self.res_check_f1.set_badge(res.F1_ok)
+        self.res_check_f2.set_value(f"{res.sigma_F2_actual:.2f} <= {res.sig_F2:.2f}")
+        self.res_check_f2.set_badge(res.F2_ok)
+
+        self.res_ft.set_value(res.Ft_N, 1)
+        self.res_fr.set_value(res.Fr_N, 1)
+        self.res_fa.set_value(res.Fa_N, 1)
+
+    def _confirm(self):
+        self.mw.on_step_completed(4)

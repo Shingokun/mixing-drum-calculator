@@ -11,20 +11,21 @@ from typing import Callable, Tuple
 
 class ParamInput(QWidget):
     """
-    Một hàng nhập thông số:
+    An input row for parameters:
         [Label]  [QLineEdit]  [Unit]
                  [error_msg]
     """
     value_changed = Signal(float)
 
-    def __init__(self, label: str, unit: str = "",
+    def __init__(self, label_key: str, unit_key: str = "",
                  default: float = 0.0,
                  validator: Callable[[str, str], Tuple[bool, str, float]] = None,
-                 tooltip: str = "",
+                 tooltip_key: str = "",
                  parent=None):
         super().__init__(parent)
-        self._label_text = label
-        self._unit = unit
+        self._label_key = label_key
+        self._unit_key = unit_key
+        self._tooltip_key = tooltip_key
         self._validator = validator
         self._valid = True
 
@@ -36,25 +37,25 @@ class ParamInput(QWidget):
         row.setSpacing(10)
 
         # Label
-        lbl = QLabel(label)
-        lbl.setFixedWidth(260)
-        lbl.setWordWrap(True)
-        row.addWidget(lbl)
+        from app.ui.i18n import _
+        self.lbl = QLabel(_(label_key))
+        self.lbl.setFixedWidth(260)
+        self.lbl.setWordWrap(True)
+        row.addWidget(self.lbl)
 
         # Input
         self.edit = QLineEdit()
         self.edit.setText(str(default))
         self.edit.setFixedWidth(130)
-        if tooltip:
-            self.edit.setToolTip(tooltip)
+        if tooltip_key:
+            self.edit.setToolTip(_(tooltip_key))
         row.addWidget(self.edit)
 
         # Unit
-        if unit:
-            unit_lbl = QLabel(unit)
-            unit_lbl.setProperty("type", "unit")
-            unit_lbl.setFixedWidth(60)
-            row.addWidget(unit_lbl)
+        self.unit_lbl = QLabel(_(unit_key) if unit_key else "")
+        self.unit_lbl.setProperty("type", "unit")
+        self.unit_lbl.setFixedWidth(60)
+        row.addWidget(self.unit_lbl)
 
         row.addStretch()
         layout.addLayout(row)
@@ -68,9 +69,17 @@ class ParamInput(QWidget):
 
         self.edit.textChanged.connect(self._on_change)
 
+    def retranslate_ui(self):
+        from app.ui.i18n import _
+        self.lbl.setText(_(self._label_key))
+        if self._unit_key:
+            self.unit_lbl.setText(_(self._unit_key))
+        if self._tooltip_key:
+            self.edit.setToolTip(_(self._tooltip_key))
+
     def _on_change(self, text: str):
         if self._validator:
-            ok, msg, val = self._validator(text, self._label_text)
+            ok, msg, val = self._validator(text, self.lbl.text())
             self._valid = ok
             self.edit.setProperty("valid", "true" if ok else "false")
             self.edit.style().unpolish(self.edit)
@@ -88,46 +97,23 @@ class ParamInput(QWidget):
                 self.value_changed.emit(val)
             except ValueError:
                 self._valid = False
-
-    def get_value(self) -> Tuple[bool, float]:
-        if self._validator:
-            ok, _, val = self._validator(self.edit.text(), self._label_text)
-            return ok, val
-        try:
-            return True, float(self.edit.text().replace(',', '.'))
-        except ValueError:
-            return False, 0.0
-
-    def set_value(self, v: float):
-        self.edit.setText(f"{v:.4g}")
-
-    def is_valid(self) -> bool:
-        if self._validator:
-            ok, _, _ = self._validator(self.edit.text(), self._label_text)
-            return ok
-        try:
-            float(self.edit.text())
-            return True
-        except ValueError:
-            return False
-
-    def set_enabled(self, en: bool):
-        self.edit.setEnabled(en)
-
-
+...
 class ResultRow(QWidget):
-    """Một hàng hiển thị kết quả: [Label] [Giá trị] [Unit] [Badge OK/FAIL]"""
+    """A row displaying a result: [Label] [Value] [Unit] [OK/FAIL Badge]"""
 
-    def __init__(self, label: str, unit: str = "", parent=None):
+    def __init__(self, label_key: str, unit_key: str = "", parent=None):
         super().__init__(parent)
+        self._label_key = label_key
+        self._unit_key = unit_key
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 4, 0, 4)
         layout.setSpacing(12)
 
-        lbl = QLabel(label)
-        lbl.setFixedWidth(280)
-        lbl.setWordWrap(True)
-        layout.addWidget(lbl)
+        from app.ui.i18n import _
+        self.lbl = QLabel(_(label_key))
+        self.lbl.setFixedWidth(280)
+        self.lbl.setWordWrap(True)
+        layout.addWidget(self.lbl)
 
         self.val_lbl = QLabel("—")
         self.val_lbl.setFixedWidth(140)
@@ -135,11 +121,10 @@ class ResultRow(QWidget):
         self.val_lbl.setStyleSheet("font-weight: bold; color: #DFE6ED;")
         layout.addWidget(self.val_lbl)
 
-        if unit:
-            u = QLabel(unit)
-            u.setProperty("type", "unit")
-            u.setFixedWidth(60)
-            layout.addWidget(u)
+        self.u = QLabel(_(unit_key) if unit_key else "")
+        self.u.setProperty("type", "unit")
+        self.u.setFixedWidth(60)
+        layout.addWidget(self.u)
 
         self.badge = QLabel("")
         self.badge.setFixedWidth(80)
@@ -149,6 +134,15 @@ class ResultRow(QWidget):
 
         layout.addStretch()
 
+    def retranslate_ui(self):
+        from app.ui.i18n import _
+        self.lbl.setText(_(self._label_key))
+        if self._unit_key:
+            self.u.setText(_(self._unit_key))
+        if self.badge.isVisible():
+            # Current badge logic is internal, might need a refresh flag
+            pass
+
     def set_value(self, v, decimals: int = 4):
         if isinstance(v, float):
             self.val_lbl.setText(f"{v:.{decimals}f}")
@@ -156,15 +150,16 @@ class ResultRow(QWidget):
             self.val_lbl.setText(str(v))
 
     def set_badge(self, ok: bool):
+        from app.ui.i18n import _
         self.badge.setVisible(True)
         if ok:
-            self.badge.setText("✓ ĐẠT")
+            self.badge.setText(_("badge_ok"))
             self.badge.setStyleSheet(
                 "background:#10AC84; color:#fff; border-radius:4px;"
                 "padding:3px 8px; font-weight:bold; font-size:11px;"
             )
         else:
-            self.badge.setText("✗ KHÔNG ĐẠT")
+            self.badge.setText(_("badge_fail"))
             self.badge.setStyleSheet(
                 "background:#EE5A24; color:#fff; border-radius:4px;"
                 "padding:3px 8px; font-weight:bold; font-size:11px;"

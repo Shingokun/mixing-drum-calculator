@@ -63,5 +63,5 @@ python -m pytest test/
 - **Công thức:** Các công thức tính toán bánh răng côn trong `UC05` được xây dựng dựa trên giáo trình Chi tiết máy (Nguyễn Trọng Hiệp) và các tiêu chuẩn TCVN hiện hành.
 
 ---
-**Phát triển bởi:** 
+**Phát triển bởi:** Nhóm 8 
 **Mục đích:** Đồ án Đa ngành / Công cụ hỗ trợ thiết kế cơ khí.

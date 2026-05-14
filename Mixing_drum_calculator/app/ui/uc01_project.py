@@ -1,5 +1,5 @@
 # ============================================================
-# uc01_project.py — Quản lý dự án
+# uc01_project.py — Project Management
 # ============================================================
 import os
 from PySide6.QtWidgets import (
@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
 from app.core.session import ProjectSession
+from app.ui.i18n import _
 
 
 class UC01ProjectPage(QWidget):
@@ -25,48 +26,33 @@ class UC01ProjectPage(QWidget):
         root.setContentsMargins(50, 40, 50, 40)
         root.setSpacing(0)
 
-        # ── Tiêu đề ──────────────────────────────────
-        title = QLabel("Hệ thống Dẫn động Thùng trộn")
-        title.setProperty("type", "title")
-        title.setAlignment(Qt.AlignCenter)
-        root.addWidget(title)
+        # ── Title ──────────────────────────────────
+        self.title_lbl = QLabel(_("app_title"))
+        self.title_lbl.setProperty("type", "title")
+        self.title_lbl.setAlignment(Qt.AlignCenter)
+        root.addWidget(self.title_lbl)
 
-        sub = QLabel("Ứng dụng hỗ trợ tính toán thiết kế chi tiết máy · CO3111")
-        sub.setProperty("type", "subtitle")
-        sub.setAlignment(Qt.AlignCenter)
-        root.addWidget(sub)
+        self.sub_lbl = QLabel("Multi-disciplinary Project · HCMUT")
+        self.sub_lbl.setProperty("type", "subtitle")
+        self.sub_lbl.setAlignment(Qt.AlignCenter)
+        root.addWidget(self.sub_lbl)
 
         root.addSpacing(30)
 
-        # ── Đường kẻ ──────────────────────────────────
+        # ── Separator ──────────────────────────────────
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
         root.addWidget(line)
         root.addSpacing(40)
 
-        # ── 3 Card hành động ──────────────────────────
-        cards_row = QHBoxLayout()
-        cards_row.setSpacing(24)
-
-        cards_row.addWidget(self._make_card(
-            "＋", "Dự án Mới",
-            "Tạo phiên tính toán mới từ đầu.",
-            self._new_project, "accent"
-        ))
-        cards_row.addWidget(self._make_card(
-            "📂", "Mở Dự án",
-            "Tải lại file dự án đã lưu (.json).",
-            self._open_project, "secondary"
-        ))
-        cards_row.addWidget(self._make_card(
-            "💾", "Lưu Dự án",
-            "Lưu phiên làm việc hiện tại xuống file.",
-            self._save_project, "secondary"
-        ))
-        root.addLayout(cards_row)
+        # ── 3 Action Cards ──────────────────────────
+        self.cards_row = QHBoxLayout()
+        self.cards_row.setSpacing(24)
+        self._init_cards()
+        root.addLayout(self.cards_row)
         root.addSpacing(40)
 
-        # ── Thông tin dự án hiện tại ──────────────────
+        # ── Current Project Info ──────────────────
         self.status_frame = QFrame()
         self.status_frame.setObjectName("StatusFrame")
         self.status_frame.setStyleSheet("""
@@ -81,19 +67,60 @@ class UC01ProjectPage(QWidget):
         sf_layout.setContentsMargins(20, 16, 20, 16)
         sf_layout.setSpacing(8)
 
-        sf_hdr = QLabel("Trạng thái dự án hiện tại")
-        sf_hdr.setProperty("type", "section")
-        sf_layout.addWidget(sf_hdr)
+        self.sf_hdr = QLabel(_("project_status"))
+        self.sf_hdr.setProperty("type", "section")
+        sf_layout.addWidget(self.sf_hdr)
 
-        self.status_lbl = QLabel("Chưa có dự án nào được mở.")
+        self.status_lbl = QLabel(_("no_project"))
         self.status_lbl.setStyleSheet("color: #7F8C8D;")
         sf_layout.addWidget(self.status_lbl)
 
         self.progress_row = QHBoxLayout()
         self.progress_row.setSpacing(8)
         self._step_badges = []
-        steps = ["UC02\nNhập liệu", "UC03\nĐộng cơ",
-                 "UC04\nBộ đai", "UC05\nHộp giảm tốc"]
+        self._init_progress_row()
+        sf_layout.addLayout(self.progress_row)
+
+        root.addWidget(self.status_frame)
+        root.addStretch()
+
+        # ── Team Info ────────────────────────────
+        self.team_lbl = QLabel(_("group_info"))
+        self.team_lbl.setStyleSheet("color: #3D5166; font-size: 11px;")
+        self.team_lbl.setAlignment(Qt.AlignCenter)
+        root.addWidget(self.team_lbl)
+
+    def _init_cards(self):
+        # Clear existing cards if any
+        while self.cards_row.count():
+            child = self.cards_row.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        self.cards_row.addWidget(self._make_card(
+            "＋", _("new_project"),
+            "Create a new calculation session.",
+            self._new_project, "accent"
+        ))
+        self.cards_row.addWidget(self._make_card(
+            "📂", _("open_project"),
+            "Load an existing project (.json).",
+            self._open_project, "secondary"
+        ))
+        self.cards_row.addWidget(self._make_card(
+            "💾", _("save_project"),
+            "Save the current session to a file.",
+            self._save_project, "secondary"
+        ))
+
+    def _init_progress_row(self):
+        while self.progress_row.count():
+            child = self.progress_row.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        self._step_badges = []
+        steps = _("step_badges")
         for step in steps:
             badge = QLabel(step)
             badge.setAlignment(Qt.AlignCenter)
@@ -102,19 +129,14 @@ class UC01ProjectPage(QWidget):
             self._step_badges.append(badge)
             self.progress_row.addWidget(badge)
         self.progress_row.addStretch()
-        sf_layout.addLayout(self.progress_row)
 
-        root.addWidget(self.status_frame)
-        root.addStretch()
-
-        # ── Thông tin nhóm ────────────────────────────
-        team = QLabel(
-            "Đồ án môn học Đa ngành CO3111 · Trường ĐH Bách Khoa TP.HCM\n"
-            "GV hướng dẫn: Trương Vĩnh Lân"
-        )
-        team.setStyleSheet("color: #3D5166; font-size: 11px;")
-        team.setAlignment(Qt.AlignCenter)
-        root.addWidget(team)
+    def retranslate_ui(self):
+        self.title_lbl.setText(_("app_title"))
+        self.sf_hdr.setText(_("project_status"))
+        self.team_lbl.setText(_("group_info"))
+        self._init_cards()
+        self._init_progress_row()
+        self.refresh()
 
     def _badge_style(self, done: bool) -> str:
         if done:
@@ -145,7 +167,7 @@ class UC01ProjectPage(QWidget):
         d.setAlignment(Qt.AlignCenter)
         d.setWordWrap(True)
         layout.addWidget(d)
-        
+
         layout.addSpacing(8)
 
         btn = QPushButton(title)
@@ -159,62 +181,60 @@ class UC01ProjectPage(QWidget):
     def _new_project(self):
         if self.session.uc02_done:
             reply = QMessageBox.question(
-                self, "Xác nhận",
-                "Tạo dự án mới sẽ xóa toàn bộ dữ liệu hiện tại. Tiếp tục?",
+                self, _("confirm"),
+                _("new_project_msg"),
                 QMessageBox.Yes | QMessageBox.No
             )
             if reply != QMessageBox.Yes:
                 return
         self.session.reset()
-        self._update_status("Dự án mới đã được tạo.")
+        self.refresh()
         self.mw.on_step_completed(0)
 
     def _open_project(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Mở dự án", "", "Project Files (*.json)"
+            self, _("open_project"), "", "Project Files (*.json)"
         )
         if not path:
             return
         try:
             loaded = ProjectSession.load(path)
-            # Copy sang session hiện tại
             self.session.__dict__.update(loaded.__dict__)
-            self._update_status(f"Đã mở: {os.path.basename(path)}")
             self.mw.refresh_all()
-            QMessageBox.information(self, "Thành công", "Đã tải dự án thành công!")
+            QMessageBox.information(self, _("success"), _("load_success"))
         except Exception as e:
-            QMessageBox.critical(self, "Lỗi", f"File không hợp lệ:\n{e}")
+            QMessageBox.critical(self, _("error"), f"{_('invalid_file')}\n{e}")
 
     def _save_project(self):
         if not self.session.uc02_done:
-            QMessageBox.warning(self, "Chưa có dữ liệu",
-                                "Chưa có dữ liệu nào để lưu.")
+            QMessageBox.warning(self, _("error"), _("no_data"))
             return
         path = self.session.filepath or ""
         if not path:
             path, _ = QFileDialog.getSaveFileName(
-                self, "Lưu dự án", "du_an_thung_tron.json",
+                self, _("save_project"), "project.json",
                 "Project Files (*.json)"
             )
         if not path:
             return
         try:
             self.session.save(path)
-            self._update_status(f"Đã lưu: {os.path.basename(path)}")
-            QMessageBox.information(self, "Đã lưu", f"Dự án đã được lưu tại:\n{path}")
+            self.refresh()
+            QMessageBox.information(self, _("success"), f"{_('saved_success')}\n{path}")
         except Exception as e:
-            QMessageBox.critical(self, "Lỗi", f"Không thể lưu file:\n{e}")
-
-    def _update_status(self, msg: str):
-        self.status_lbl.setText(msg)
+            QMessageBox.critical(self, _("error"), f"Could not save file:\n{e}")
 
     def refresh(self):
         states = [self.session.uc02_done, self.session.uc03_done,
                   self.session.uc04_done, self.session.uc05_done]
         for badge, done in zip(self._step_badges, states):
             badge.setStyleSheet(self._badge_style(done))
+
         done_count = sum(states)
-        if done_count == 0:
-            self.status_lbl.setText("Dự án mới — chưa có bước nào hoàn thành.")
+        if self.session.filepath:
+            fname = os.path.basename(self.session.filepath)
+            self.status_lbl.setText(f"{fname} — {_('step_completed', done=done_count)}")
+        elif done_count > 0:
+            self.status_lbl.setText(_("step_completed", done=done_count))
         else:
-            self.status_lbl.setText(f"Đã hoàn thành {done_count}/4 bước tính toán.")
+            self.status_lbl.setText(_("no_project"))

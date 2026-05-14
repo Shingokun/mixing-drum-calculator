@@ -1,5 +1,5 @@
 # ============================================================
-# uc02_input.py — Nhập thông số đầu vào
+# uc02_input.py — Input parameters
 # ============================================================
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt, Signal
 from app.core.session import ProjectSession
 from app.core.validators import validate_positive, validate_efficiency, validate_ratio
 from app.ui.widgets.param_input import ParamInput
+from app.ui.i18n import _
 
 
 class UC02InputPage(QWidget):
@@ -26,13 +27,13 @@ class UC02InputPage(QWidget):
         root.setSpacing(0)
 
         # Header
-        hdr = QLabel("Bước 1 · Nhập Thông Số Đầu Vào")
-        hdr.setProperty("type", "title")
-        root.addWidget(hdr)
+        self.hdr = QLabel(_("uc02_hdr"))
+        self.hdr.setProperty("type", "title")
+        root.addWidget(self.hdr)
 
-        sub = QLabel("Điền các thông số cơ bản và hệ số hiệu suất của hệ thống dẫn động.")
-        sub.setProperty("type", "subtitle")
-        root.addWidget(sub)
+        self.sub = QLabel(_("uc02_sub"))
+        self.sub.setProperty("type", "subtitle")
+        root.addWidget(self.sub)
         root.addSpacing(20)
 
         # Scroll area
@@ -44,65 +45,51 @@ class UC02InputPage(QWidget):
         cl.setSpacing(20)
         cl.setContentsMargins(0, 0, 0, 0)
 
-        # ── Group 1: Thông số động học ────────────────
-        g1 = QGroupBox("📊  Thông số động học cơ bản")
-        g1l = QVBoxLayout(g1)
+        # ── Group 1: Kinematics ────────────────
+        self.g1 = QGroupBox(_("g_kinematics"))
+        g1l = QVBoxLayout(self.g1)
         g1l.setSpacing(12)
 
-        self.inp_power = ParamInput(
-            "Công suất thùng trộn  P", "kW", 6.5,
-            lambda v, n: validate_positive(v, n),
-            "Công suất yêu cầu trên trục thùng trộn (kW)"
-        )
-        self.inp_rpm = ParamInput(
-            "Số vòng quay đầu ra  n", "vg/ph", 75.0,
-            lambda v, n: validate_positive(v, n),
-            "Số vòng quay của trục thùng trộn"
-        )
-        self.inp_life = ParamInput(
-            "Thời gian phục vụ  L", "năm", 10.0,
-            lambda v, n: validate_positive(v, n),
-            "Tuổi thọ thiết kế của hệ thống"
-        )
+        self.inp_power = ParamInput("p_power", "kW", 6.5, validate_positive)
+        self.inp_rpm = ParamInput("p_rpm", "unit_rpm", 75.0, validate_positive)
+        self.inp_life = ParamInput("p_life", "unit_year", 10.0, validate_positive)
+        
         for w in [self.inp_power, self.inp_rpm, self.inp_life]:
             g1l.addWidget(w)
-        cl.addWidget(g1)
+        cl.addWidget(self.g1)
 
-        # ── Group 2: Hệ số hiệu suất ─────────────────
-        g2 = QGroupBox("⚙️  Hệ số hiệu suất các bộ truyền")
-        g2l = QVBoxLayout(g2)
+        # ── Group 2: Efficiency ─────────────────
+        self.g2 = QGroupBox(_("g_efficiency"))
+        g2l = QVBoxLayout(self.g2)
         g2l.setSpacing(12)
 
-        self.inp_eta_kn  = ParamInput("Hiệu suất khớp nối  η_kn",  "", 1.00, validate_efficiency)
-        self.inp_eta_ol  = ParamInput("Hiệu suất ổ lăn (1 cặp)  η_ol",  "", 0.99, validate_efficiency)
-        self.inp_eta_brc = ParamInput("Hiệu suất bánh răng côn  η_brc", "", 0.96, validate_efficiency)
-        self.inp_eta_brt = ParamInput("Hiệu suất bánh răng trụ  η_brt", "", 0.97, validate_efficiency)
-        self.inp_eta_x   = ParamInput("Hiệu suất bộ truyền xích/đai  η_x", "", 0.91, validate_efficiency)
+        self.inp_eta_kn  = ParamInput("p_eta_kn",  "", 1.00, validate_efficiency)
+        self.inp_eta_ol  = ParamInput("p_eta_ol",  "", 0.99, validate_efficiency)
+        self.inp_eta_brc = ParamInput("p_eta_brc", "", 0.96, validate_efficiency)
+        self.inp_eta_brt = ParamInput("p_eta_brt", "", 0.97, validate_efficiency)
+        self.inp_eta_x   = ParamInput("p_eta_x",   "", 0.91, validate_efficiency)
         for w in [self.inp_eta_kn, self.inp_eta_ol, self.inp_eta_brc,
                   self.inp_eta_brt, self.inp_eta_x]:
             g2l.addWidget(w)
-        cl.addWidget(g2)
+        cl.addWidget(self.g2)
 
-        # ── Group 3: Tỉ số truyền sơ bộ ──────────────
-        g3 = QGroupBox("🔢  Tỉ số truyền sơ bộ")
-        g3l = QVBoxLayout(g3)
+        # ── Group 3: Ratios ──────────────
+        self.g3 = QGroupBox(_("g_prelim_ratio"))
+        g3l = QVBoxLayout(self.g3)
         g3l.setSpacing(12)
 
-        self.inp_u_h  = ParamInput("Tỉ số truyền hộp giảm tốc  u_h",  "", 13.0,
-                                    lambda v, n: validate_ratio(v, n, 5, 60))
-        self.inp_u_x  = ParamInput("Tỉ số truyền bộ truyền xích/đai  u_x", "", 3.0,
-                                    lambda v, n: validate_ratio(v, n, 1, 10))
-        self.inp_u1   = ParamInput("Tỉ số truyền cấp nhanh  u₁",  "", 3.45,
-                                    lambda v, n: validate_ratio(v, n, 1, 10))
+        self.inp_u_h  = ParamInput("p_u_h",  "", 13.0, lambda v, n: validate_ratio(v, n, 5, 60))
+        self.inp_u_x  = ParamInput("p_u_x",  "", 3.0,  lambda v, n: validate_ratio(v, n, 1, 10))
+        self.inp_u1   = ParamInput("p_u1",   "", 3.45, lambda v, n: validate_ratio(v, n, 1, 10))
         for w in [self.inp_u_h, self.inp_u_x, self.inp_u1]:
             g3l.addWidget(w)
-        cl.addWidget(g3)
+        cl.addWidget(self.g3)
 
         cl.addStretch()
         scroll.setWidget(content)
         root.addWidget(scroll, 1)
 
-        # ── Footer: nút Xác nhận ──────────────────────
+        # ── Footer ──────────────────────
         root.addSpacing(16)
         footer = QHBoxLayout()
         footer.addStretch()
@@ -111,11 +98,21 @@ class UC02InputPage(QWidget):
         self.err_summary.setProperty("type", "error")
         footer.addWidget(self.err_summary)
 
-        self.btn_confirm = QPushButton("Xác nhận và Tiếp tục  →")
+        self.btn_confirm = QPushButton(_("confirm_next"))
         self.btn_confirm.setFixedHeight(42)
         self.btn_confirm.clicked.connect(self._confirm)
         footer.addWidget(self.btn_confirm)
         root.addLayout(footer)
+
+    def retranslate_ui(self):
+        self.hdr.setText(_("uc02_hdr"))
+        self.sub.setText(_("uc02_sub"))
+        self.g1.setTitle(_("g_kinematics"))
+        self.g2.setTitle(_("g_efficiency"))
+        self.g3.setTitle(_("g_prelim_ratio"))
+        self.btn_confirm.setText(_("confirm_next"))
+        for w in self._all_inputs():
+            w.retranslate_ui()
 
     def _all_inputs(self):
         return [
@@ -128,10 +125,7 @@ class UC02InputPage(QWidget):
     def _confirm(self):
         invalid = [w for w in self._all_inputs() if not w.is_valid()]
         if invalid:
-            self.err_summary.setText(
-                f"⚠  {len(invalid)} trường chưa hợp lệ. Vui lòng kiểm tra lại."
-            )
-            # Trigger re-validate
+            self.err_summary.setText(_("invalid_inputs", count=len(invalid)))
             for w in invalid:
                 w._on_change(w.edit.text())
             return
