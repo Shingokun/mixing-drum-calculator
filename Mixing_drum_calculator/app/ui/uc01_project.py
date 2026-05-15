@@ -192,7 +192,7 @@ class UC01ProjectPage(QWidget):
         self.mw.on_step_completed(0)
 
     def _open_project(self):
-        path, _ = QFileDialog.getOpenFileName(
+        path, _filter = QFileDialog.getOpenFileName(
             self, _("open_project"), "", "Project Files (*.json)"
         )
         if not path:
@@ -211,7 +211,7 @@ class UC01ProjectPage(QWidget):
             return
         path = self.session.filepath or ""
         if not path:
-            path, _ = QFileDialog.getSaveFileName(
+            path, _filter = QFileDialog.getSaveFileName(
                 self, _("save_project"), "project.json",
                 "Project Files (*.json)"
             )

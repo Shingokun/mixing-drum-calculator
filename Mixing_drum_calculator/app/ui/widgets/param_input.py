@@ -97,7 +97,26 @@ class ParamInput(QWidget):
                 self.value_changed.emit(val)
             except ValueError:
                 self._valid = False
-...
+
+    def is_valid(self) -> bool:
+        return self._valid
+
+    def get_value(self) -> Tuple[bool, float]:
+        text = self.edit.text()
+        if self._validator:
+            ok, _, val = self._validator(text, self.lbl.text())
+            return ok, val
+        try:
+            val = float(text.replace(',', '.'))
+            return True, val
+        except ValueError:
+            return False, 0.0
+
+    def set_value(self, value: float):
+        # Keep the existing validation flow by updating the edit text.
+        self.edit.setText(str(value))
+
+
 class ResultRow(QWidget):
     """A row displaying a result: [Label] [Value] [Unit] [OK/FAIL Badge]"""
 

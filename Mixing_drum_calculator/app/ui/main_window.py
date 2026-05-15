@@ -177,6 +177,9 @@ class MainWindow(QMainWindow):
             self.nav.blockSignals(False)
             return
         self.stack.setCurrentIndex(idx)
+        page = self.stack.widget(idx)
+        if hasattr(page, "refresh"):
+            page.refresh()
 
     def _update_nav_state(self):
         """Enable/disable nav items based on session state"""
@@ -219,6 +222,9 @@ class MainWindow(QMainWindow):
             self.nav.setCurrentRow(next_idx)
             self.nav.blockSignals(False)
             self.stack.setCurrentIndex(next_idx)
+            page = self.stack.widget(next_idx)
+            if hasattr(page, "refresh"):
+                page.refresh()
 
         if next_idx == 5:
             self.page_uc06.refresh()

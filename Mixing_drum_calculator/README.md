@@ -21,25 +21,35 @@
 - **Xuất bản:** openpyxl (Excel), reportlab (PDF)
 - **Kiểm thử:** Pytest
 
-## 🚀 Hướng dẫn cài đặt
+## �‍🏫 Hướng dẫn Cài đặt & Chạy ứng dụng 
 
-Để chạy dự án trên môi trường Windows, hãy thực hiện theo các bước sau:
+Sau khi giải nén file `.Zip` của nhóm,  vui lòng mở Terminal (Command Prompt hoặc PowerShell) tại đúng thư mục `Mixing_drum_calculator` và thực hiện các bước sau:
 
-1. **Kích hoạt môi trường ảo (venv):**
-   ```powershell
-   # Nếu chưa có venv, hãy tạo: python -m venv venv
-   .\venv\Scripts\activate
-   ```
+**Bước 1: Tạo môi trường ảo (Virtual Environment)** (Khuyến nghị để tránh xung đột thư viện ngoài)
+```powershell
+python -m venv venv
+```
 
-2. **Cài đặt các thư viện cần thiết:**
-   ```powershell
-   pip install -r requirements.txt
-   ```
+**Bước 2: Kích hoạt môi trường ảo**
+* Trên **Windows** (CMD/PowerShell):
+```powershell
+.\venv\Scripts\activate hoặc .\venv\Scripts\Activate.ps1
+```
+* Trên **Mac/Linux**:
+```bash
+source venv/bin/activate
+```
 
-3. **Khởi động ứng dụng:**
-   ```powershell
-   python main.py
-   ```
+**Bước 3: Cài đặt các thư viện cần thiết**
+```powershell
+pip install -r requirements.txt
+```
+
+**Bước 4: Khởi động giao diện phần mềm**
+```powershell
+python main.py
+```
+Sau khi chạy, giao diện ứng dụng sẽ xuất hiện, cho phép thao tác nhập liệu và tính toán lần lượt từ UC01 đến UC06.
 
 ## 🧪 Kiểm thử (Testing)
 

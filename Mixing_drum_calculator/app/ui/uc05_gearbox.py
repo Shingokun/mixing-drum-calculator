@@ -100,12 +100,18 @@ class UC05GearboxPage(QWidget):
         self.refresh()
 
     def refresh(self):
-        if not self.session.uc03_done: return
+        if not self.session.uc03_done:
+            return
+            
         m = self.session.motor
-        res = self.calc.run(m.u_h_actual, m.shaft_rpms['I'], m.shaft_torques['I'])
+        inp = self.session.inputs
+        # u1 is the ratio of the high-speed stage (bevel gears)
+        res = self.calc.run(inp.u1, m.shaft_rpms['I'], m.shaft_torques['I'])
         self.session.gearbox.cone = res
+        self.session.gearbox.strength_ok = res.F1_ok and res.F2_ok
         self.session.uc05_done = True
 
+        # Update all UI widgets
         self.res_sig_h.set_value(res.sig_H, 2)
         self.res_sig_f1.set_value(res.sig_F1, 2)
         self.res_sig_f2.set_value(res.sig_F2, 2)
@@ -125,6 +131,12 @@ class UC05GearboxPage(QWidget):
         self.res_ft.set_value(res.Ft_N, 1)
         self.res_fr.set_value(res.Fr_N, 1)
         self.res_fa.set_value(res.Fa_N, 1)
+        
+        # Ensure results are visible
+        self.g_stress.setVisible(True)
+        self.g_geo.setVisible(True)
+        self.g_check.setVisible(True)
+        self.g_forces.setVisible(True)
 
     def _confirm(self):
         self.mw.on_step_completed(4)
